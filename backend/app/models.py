@@ -14,9 +14,41 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class TokenStatus(str, Enum):
+    BOOKED = "booked"                    # made for an appointment; patient not here yet (NOT in the live queue)
     WAITING = "waiting"                  # in the queue
     IN_CONSULTATION = "in_consultation"  # with a doctor now
     DONE = "done"                        # consultation finished
+    CANCELLED = "cancelled"              # its appointment was rejected or cancelled
+
+
+class AppointmentStatus(str, Enum):
+    r"""
+    The life of one booking (Module 5: patient self-booking).
+
+        requested --accept--> accepted --"I've arrived"--> checked_in --> completed
+            |                    |  \--15 min after the slot, not arrived--> no_show
+            |                    \--doctor rejects--> rejected (with a reason)
+            \--patient cancels (up to 1 hour before)--> cancelled
+
+    With auto_accept on (the default), a booking starts at "accepted".
+    """
+    REQUESTED = "requested"      # waiting for the doctor (auto_accept off)
+    ACCEPTED = "accepted"        # confirmed; has a token
+    REJECTED = "rejected"        # the doctor said no (reject_reason says why)
+    CANCELLED = "cancelled"      # the patient cancelled
+    CHECKED_IN = "checked_in"    # the patient is at the hospital: in the live queue
+    COMPLETED = "completed"      # seen by the doctor
+    NO_SHOW = "no_show"          # never checked in
+
+
+# Bookings that still hold their slot. Used for "no double booking".
+ACTIVE_APPOINTMENT_STATUSES = (AppointmentStatus.REQUESTED, AppointmentStatus.ACCEPTED,
+                               AppointmentStatus.CHECKED_IN)
+
+
+class AppointmentSource(str, Enum):
+    ONLINE = "online"            # the patient booked it
+    WALK_IN = "walk_in"          # the doctor added someone who just turned up
 
 
 class CallbackStatus(str, Enum):
@@ -40,6 +72,53 @@ class TripStatus(str, Enum):
     ASSIGNED = "assigned"        # an ambulance is on its way / carrying the patient
     COMPLETED = "completed"      # patient delivered, ambulance free again
     CANCELLED = "cancelled"
+
+
+# ---------- Module 4: Pharmacy (lists of allowed values) ----------
+
+class DosageForm(str, Enum):
+    """The physical form a medicine comes in."""
+    TABLET = "tablet"
+    CAPSULE = "capsule"
+    SYRUP = "syrup"
+    INJECTION = "injection"
+    OINTMENT = "ointment"
+    DROPS = "drops"
+    INHALER = "inhaler"
+
+
+class DrugSchedule(str, Enum):
+    """
+    Indian Drugs & Cosmetics Rules, 1945. Decides who may buy a medicine:
+      OTC  over the counter: anyone, no prescription (e.g. Paracetamol)
+      H    prescription needed (most antibiotics)
+      H1   prescription needed AND the pharmacy keeps a register (e.g. some antibiotics, anti-TB)
+      X    prescription needed, kept in duplicate, strict storage (e.g. strong sedatives)
+    """
+    OTC = "OTC"
+    H = "H"
+    H1 = "H1"
+    X = "X"
+
+
+class StorageType(str, Enum):
+    ROOM = "room"                       # normal shelf, below 25-30 °C
+    COLD_CHAIN = "cold_chain_2_8C"      # fridge, 2-8 °C (insulin, many vaccines)
+
+
+class PurchaseOrderStatus(str, Enum):
+    DRAFT = "draft"          # being written, not sent to the supplier yet
+    ORDERED = "ordered"      # sent to the supplier
+    RECEIVED = "received"    # the goods arrived and became batches
+
+
+class MovementType(str, Enum):
+    """Why stock changed. Every change is written to stock_movements."""
+    IN = "in"                # new stock received
+    OUT = "out"              # dispensed to a patient
+    ADJUST = "adjust"        # stock count correction (damaged, miscounted...)
+    EXPIRED = "expired"      # removed because it expired
+    RETURNED = "returned"    # patient or ward returned it
 
 
 # ---------- Departments ----------
@@ -81,6 +160,8 @@ class Token(BaseModel):
     created_at: datetime
     called_at: datetime | None = None
     finished_at: datetime | None = None
+    scheduled_at: datetime | None = None   # the appointment's slot time (queue order), if booked
+    priority: int = 0                      # higher = sooner among the same slot time
 
 
 class TokenView(Token):

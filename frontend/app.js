@@ -34,7 +34,7 @@ const fmtMin = m => (m === null || m === undefined ? "–" : `${Math.round(m)} m
 
 // ---------- screen switching ----------
 
-let currentScreen = "reception";
+let currentScreen = "doctor";
 document.querySelectorAll("nav.app-tabs button").forEach(btn => {
   btn.addEventListener("click", () => {
     currentScreen = btn.dataset.screen;
@@ -68,33 +68,6 @@ function fillRooms() {
     `<option value="${i + 1}">Room ${i + 1}</option>`).join("");
   roomSel.value = keep >= 1 && keep <= dept.doctors ? keep : 1;
 }
-
-// ---------- 1. Reception ----------
-
-document.getElementById("register-form").addEventListener("submit", async e => {
-  e.preventDefault(); // stop the browser reloading the page
-  const form = new FormData(e.target);
-  try {
-    const token = await api("/tokens", {
-      method: "POST",
-      body: JSON.stringify({
-        patient_name: form.get("patient_name"),
-        department_id: Number(form.get("department_id")),
-      }),
-    });
-    const dept = departments.find(d => d.id === token.department_id);
-    const slip = document.getElementById("token-slip");
-    slip.innerHTML = `
-      <div class="muted">${esc(dept.name)}</div>
-      <div class="num">${esc(token.number)}</div>
-      <div>${esc(token.patient_name)}</div>
-      <div class="muted">${token.people_ahead} ahead of you · about ${fmtMin(token.estimated_wait_minutes)} wait</div>`;
-    slip.classList.remove("hidden");
-    e.target.patient_name.value = "";
-  } catch (err) {
-    alert("Could not register: " + err.message);
-  }
-});
 
 // ---------- 2. Doctor ----------
 
@@ -140,12 +113,107 @@ async function renderDoctorQueue() {
   const deptId = doctorForm.department_id.value;
   if (!deptId) return;
   const queue = await api(`/departments/${deptId}/queue`);
+  if (canAct) rxFillCurrentPatient(queue);
   document.getElementById("doctor-queue").innerHTML = queue.length
     ? queue.map(t => `<tr>
         <td>${esc(t.number)}</td><td>${esc(t.patient_name)}</td>
         <td>${t.status === "waiting" ? "Waiting" : "Room " + t.room}</td>
         <td>${t.status === "waiting" ? fmtMin(t.estimated_wait_minutes) : "–"}</td></tr>`).join("")
     : `<tr><td colspan="4" class="muted">Nobody in the queue</td></tr>`;
+}
+
+// ---------- 2b. Doctor: Add prescription (Module 4) ----------
+// The doctor picks medicines, the list is saved as one prescription, and the
+// pharmacy sees it on its Dispense screen.
+
+const rxForm = document.getElementById("rx-form");
+const rxMsg = document.getElementById("rx-msg");
+const rxLines = [];                 // [{ med, dose, duration_days, quantity, instructions }]
+let rxTokenId = null;               // the OPD token of the patient in the room, if any
+let rxAutoName = "";                // the name we filled in automatically (so we don't overwrite typing)
+const rxPicker = PH.medicinePicker(document.getElementById("rx-med"), { onPick: rxSuggestQuantity });
+
+// "1-0-1" for 5 days = 2 a day × 5 = 10 tablets. Syrups, inhalers... = 1 pack.
+function rxSuggestQuantity() {
+  const med = rxPicker.selected;
+  if (!med) return;
+  const perDay = document.getElementById("rx-dose").value.split("-").reduce((sum, x) => sum + (parseFloat(x) || 0), 0);
+  const days = Number(document.getElementById("rx-days").value) || 0;
+  const countable = ["tablet", "capsule"].includes(med.unit);
+  document.getElementById("rx-qty").value = countable && perDay && days ? Math.ceil(perDay * days) : 1;
+}
+document.getElementById("rx-dose").addEventListener("input", rxSuggestQuantity);
+document.getElementById("rx-days").addEventListener("input", rxSuggestQuantity);
+
+function drawRxLines() {
+  document.getElementById("rx-items").innerHTML = rxLines.map((l, i) => `<tr>
+    <td>${esc(l.med.display_name)} ${l.med.schedule !== "OTC" ? `<small>(Schedule ${esc(l.med.schedule)})</small>` : ""}</td>
+    <td>${esc(l.dose)}</td><td>${l.duration_days}</td><td>${l.quantity} ${esc(l.med.unit)}${l.quantity === 1 ? "" : "s"}</td>
+    <td>${esc(l.instructions || "–")}</td>
+    <td><button type="button" class="secondary" data-remove="${i}">Remove</button></td></tr>`).join("");
+}
+
+document.getElementById("rx-add-btn").addEventListener("click", () => {
+  const med = rxPicker.selected;
+  const dose = document.getElementById("rx-dose").value.trim();
+  const days = Number(document.getElementById("rx-days").value);
+  const qty = Number(document.getElementById("rx-qty").value);
+  if (!med) return showMsg(rxMsg, "Pick the medicine from the suggestions under the box (type 2 or more letters).", true);
+  if (!dose) return showMsg(rxMsg, "Enter the dose, for example 1-0-1 (morning-afternoon-night).", true);
+  if (!(days >= 1)) return showMsg(rxMsg, "Enter how many days, 1 or more.", true);
+  if (!(qty >= 1)) return showMsg(rxMsg, "Enter the total quantity, 1 or more.", true);
+  rxLines.push({ med, dose, duration_days: days, quantity: qty,
+                 instructions: document.getElementById("rx-instr").value });
+  drawRxLines();
+  rxMsg.textContent = "";
+  rxPicker.clear();
+  document.getElementById("rx-qty").value = "";
+  document.getElementById("rx-med").focus();
+});
+
+document.getElementById("rx-items").addEventListener("click", e => {
+  const b = e.target.closest("[data-remove]");
+  if (b) { rxLines.splice(Number(b.dataset.remove), 1); drawRxLines(); }
+});
+
+rxForm.addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = rxForm.patient_name.value.trim();
+  if (!name) { rxForm.patient_name.focus(); return showMsg(rxMsg, "Enter the patient's name.", true); }
+  if (!rxLines.length) return showMsg(rxMsg, "Add at least one medicine first (\"Add medicine\").", true);
+  try {
+    const rx = await api("/pharmacy/prescriptions", {
+      method: "POST",
+      body: JSON.stringify({
+        patient_name: name,
+        token_id: name === rxAutoName ? rxTokenId : null,   // only link the token if it's the same patient
+        notes: rxForm.notes.value.trim(),
+        items: rxLines.map(l => ({ medicine_id: l.med.id, dose: l.dose, duration_days: l.duration_days,
+                                   quantity: l.quantity, instructions: l.instructions })),
+      }),
+    });
+    showMsg(rxMsg, `Prescription #${rx.id} saved for ${rx.patient_name} (${rx.items.length} medicine${rx.items.length === 1 ? "" : "s"}). The pharmacy can dispense it now.`, false);
+    rxLines.length = 0;
+    drawRxLines();
+    rxForm.notes.value = "";
+  } catch (err) {
+    showMsg(rxMsg, `Prescription not saved: ${err.message}`, true);
+  }
+});
+
+// Called after the queue is drawn: fill in the patient who is in this doctor's room now.
+function rxFillCurrentPatient(queue) {
+  const room = Number(doctorForm.room.value);
+  const inRoom = queue.find(t => t.status === "in_consultation" && t.room === room);
+  const box = rxForm.patient_name;
+  if (inRoom && (box.value === "" || box.value === rxAutoName)) {
+    box.value = rxAutoName = inRoom.patient_name;
+    rxTokenId = inRoom.id;
+    document.getElementById("rx-token-note").textContent = `Token ${inRoom.number}, in room ${room} now`;
+  } else if (!inRoom && box.value === rxAutoName) {
+    document.getElementById("rx-token-note").textContent = "";
+    rxTokenId = null;
+  }
 }
 
 // ---------- 3. Waiting-room display ----------
@@ -182,7 +250,7 @@ async function renderDashboard() {
         <dt>Avg people waiting Lq</dt><dd>${m.avg_queue_length}</dd>
         <dt>Avg wait Wq</dt><dd>${fmtMin(m.avg_wait_minutes)}</dd>
       </dl>` : `<p class="warn">Overloaded: patients arrive faster than ${d.doctors} doctor(s) can see them (ρ = ${m.utilization.toFixed(2)}). Add a doctor.</p>`}
-      <form data-id="${d.id}" class="dept-edit">
+      <form data-id="${d.id}" class="dept-edit" data-action>
         <label>Doctors <input name="doctors" type="number" min="1" value="${d.doctors}"></label>
         <label>Min/patient <input name="avg_consult_minutes" type="number" min="1" step="0.5" value="${d.avg_consult_minutes}"></label>
         <label>Arrivals/hr <input name="expected_patients_per_hour" type="number" min="0" step="0.5" value="${d.expected_patients_per_hour}"></label>
@@ -224,7 +292,7 @@ function showMsg(el, text, isError) {
 async function renderBeds() {
   const wards = await api("/wards");
 
-  // Ward dropdown, with the free count so reception can see it at a glance.
+  // Ward dropdown, with the free count so staff can see it at a glance.
   const options = wards.map(w =>
     `<option value="${w.id}">${esc(w.name)} (${w.free} free)</option>`).join("");
   if (options !== lastWardOptions) {
@@ -240,10 +308,12 @@ async function renderBeds() {
       <h3>${esc(w.name)}</h3>
       <div class="muted">${w.free} free · ${w.occupied} occupied · ${w.total} total</div>
       <div class="bed-grid">
-        ${w.beds.map(b => b.occupied
+        ${w.beds.map(b => b.occupied && canAct
           ? `<button type="button" class="bed occupied" data-ward="${w.id}" data-bed="${b.number}"
                data-name="${esc(b.patient_name)}" title="Bed ${b.number}: ${esc(b.patient_name)}">${b.number}</button>`
-          : `<div class="bed free" title="Bed ${b.number}: free">${b.number}</div>`).join("")}
+          : b.occupied   // view only: show the bed, but it can't be clicked
+            ? `<div class="bed occupied" title="Bed ${b.number}: occupied (${esc(b.patient_name)})">${b.number}</div>`
+            : `<div class="bed free" title="Bed ${b.number}: free">${b.number}</div>`).join("")}
       </div>
     </div>`).join("");
 }
@@ -280,39 +350,51 @@ document.getElementById("wards").addEventListener("click", async e => {
   refresh();
 });
 
-// ---------- who may use which screen (step 5) ----------
-// The SERVER enforces this on every request (deps.py). Here we only show a
-// friendly message instead of buttons that would fail. Admins may use every screen.
+// ---------- who may USE which screen ----------
+// Everyone can LOOK at every screen. Only these roles can press its buttons
+// (admins can press everything). The SERVER enforces this too (deps.py), and
+// hides full patient names from non-staff, so this is only for a friendly page.
 const SCREEN_ROLES = {
-  reception: ["receptionist"],
   doctor: ["doctor"],
   dashboard: [],                         // empty list = admin only
-  beds: ["receptionist", "doctor"],
-  display: null,                         // null = public (waiting-room TV)
+  beds: ["doctor"],
+  display: null,                         // null = nothing to press (waiting-room TV)
 };
 
-// Returns true if the current screen may be shown; otherwise shows a message
-// (or goes to the login page) and returns false.
+// Can the current user press this screen's buttons?
+let canAct = false;
+
+// Turn the staff-only controls on or off. A <form data-action> means every control inside it.
+// Called again after each redraw, because the Dashboard draws new forms every 5 seconds.
+function setActionControls(section) {
+  section.querySelectorAll("[data-action]").forEach(el => {
+    const controls = el.tagName === "FORM" ? [...el.elements] : [el];
+    controls.forEach(c => { c.disabled = !canAct; });
+  });
+}
+
+// Always shows the screen. If the user may not act on it, turns off every
+// [data-action] control and shows a short "view only" note instead.
 async function screenAllowed() {
   const section = document.getElementById(currentScreen);
   const roles = SCREEN_ROLES[currentScreen];
   const u = await window.mediq.user;
-  const access = roles === null ? "ok" : window.mediq.checkAccess(u, roles.length ? roles : ["admin"]);
-  if (access === "login") { window.mediq.goToLogin(); return false; }
+  canAct = roles === null || window.mediq.checkAccess(u, roles.length ? roles : ["admin"]) === "ok";
 
-  section.classList.toggle("locked", access === "forbidden");
-  let msg = section.querySelector(".locked-msg");
-  if (access === "forbidden") {
-    if (!msg) {
-      msg = document.createElement("p");
-      msg.className = "locked-msg warn";
-      section.append(msg);
-    }
-    const needed = roles.length ? roles.join(" or ") : "admin";
-    const a = /^[aeiou]/i.test(needed) ? "an" : "a";   // "an admin", "a doctor"
-    msg.textContent = `This screen needs ${a} ${needed} account. You're signed in as ${u.full_name} (${u.role}).`;
-    return false;
+  setActionControls(section);
+
+  let note = section.querySelector(".view-note");
+  if (canAct) { note?.remove(); return true; }
+  if (!note) {
+    note = document.createElement("p");
+    note.className = "view-note hint";
+    section.querySelector("h2").after(note);   // right under the screen title
   }
+  const needed = roles.length ? roles.join(" or ") : "admin";
+  const a = /^[aeiou]/i.test(needed) ? "an" : "a";   // "an admin", "a doctor"
+  note.innerHTML = u
+    ? `View only. The buttons need ${a} ${needed} account (you're signed in as ${window.mediq.esc(u.role)}).`
+    : `View only. Patient names show as initials. <a href="/login.html">Staff log in</a> to use the buttons.`;
   return true;
 }
 
@@ -325,6 +407,7 @@ async function refresh() {
     if (currentScreen === "display") await renderBoard();
     if (currentScreen === "dashboard") await renderDashboard();
     if (currentScreen === "beds") await renderBeds();
+    setActionControls(document.getElementById(currentScreen));
   } catch (err) {
     console.error(err);
   }

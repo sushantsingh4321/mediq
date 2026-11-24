@@ -4,7 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>mediQ – OPD Queue</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="style.css">
+  <!-- core.js: theme (before the page is drawn) + shared helpers -->
+  <script src="core.js"></script>
 </head>
 <body>
   <!-- site.js draws the shared website top strip, header and menu in here -->
@@ -15,8 +20,7 @@
     <h1>mediQ <small id="hospital-name"></small></h1>
     <!-- Each button shows one "screen". app.js handles the switching. -->
     <nav class="app-tabs">
-      <button data-screen="reception" class="active">Reception</button>
-      <button data-screen="doctor">Doctor</button>
+      <button data-screen="doctor" class="active">Doctor</button>
       <button data-screen="display">Waiting room</button>
       <button data-screen="dashboard">Dashboard</button>
       <button data-screen="beds">Beds</button>
@@ -24,25 +28,15 @@
   </header>
 
   <main>
-    <!-- 1. RECEPTION: register a patient, hand out a token -->
-    <section id="reception" class="screen active">
-      <h2>Register a patient</h2>
-      <form id="register-form">
-        <label>Patient name <input name="patient_name" required></label>
-        <label>Department <select name="department_id" class="dept-select" required></select></label>
-        <button type="submit">Give token</button>
-      </form>
-      <div id="token-slip" class="slip hidden"></div>
-    </section>
-
     <!-- 2. DOCTOR: call the next patient into a room -->
-    <section id="doctor" class="screen">
+    <section id="doctor" class="screen active">
       <h2>Doctor's desk</h2>
+      <p><a href="/doctor-appointments.html">My appointments</a>: add a walk-in patient, bookings by day, accept or reject, auto-accept on/off.</p>
       <form id="doctor-form">
         <label>Department <select name="department_id" class="dept-select"></select></label>
-        <label>Room <select name="room" id="room-select"></select></label>
-        <button type="submit">Call next patient</button>
-        <button type="button" id="finish-btn" class="secondary">Finish current</button>
+        <label>Room <select name="room" id="room-select" data-action></select></label>
+        <button type="submit" data-action>Call next patient</button>
+        <button type="button" id="finish-btn" class="secondary" data-action>Finish current</button>
       </form>
       <p id="doctor-msg"></p>
       <h3>Queue</h3>
@@ -50,6 +44,37 @@
         <thead><tr><th>Token</th><th>Name</th><th>Status</th><th>Est. wait</th></tr></thead>
         <tbody id="doctor-queue"></tbody>
       </table>
+
+      <!-- Module 4: the doctor writes a prescription; the pharmacy dispenses it
+           (pharmacy-dispense.html). app.js fills in the patient who is in the room now. -->
+      <h3 id="rx-title">Add prescription</h3>
+      <form id="rx-form" class="rx-form" data-action aria-labelledby="rx-title" novalidate>
+        <div class="rx-row">
+          <label>Patient name <input name="patient_name" id="rx-patient" maxlength="100" required></label>
+          <span class="hint" id="rx-token-note"></span>
+        </div>
+        <fieldset class="rx-add">
+          <legend>Add a medicine</legend>
+          <label class="rx-wide">Medicine <input id="rx-med" type="search" placeholder="Brand or generic name"></label>
+          <label>Dose <input id="rx-dose" value="1-0-1" maxlength="20" size="7"
+                 title="Morning-afternoon-night, e.g. 1-0-1"></label>
+          <label>Days <input id="rx-days" type="number" min="1" max="365" value="5" size="4"></label>
+          <label>Quantity <input id="rx-qty" type="number" min="1" size="5"></label>
+          <label>Instructions
+            <select id="rx-instr">
+              <option>after food</option><option>before food</option><option>with food</option>
+              <option>at bedtime</option><option>when needed</option><option value="">(none)</option>
+            </select></label>
+          <button type="button" class="secondary" id="rx-add-btn">Add medicine</button>
+        </fieldset>
+        <table class="rx-items">
+          <thead><tr><th>Medicine</th><th>Dose</th><th>Days</th><th>Qty</th><th>Instructions</th><th><span class="ui-sr-only">Remove</span></th></tr></thead>
+          <tbody id="rx-items"></tbody>
+        </table>
+        <label class="rx-wide">Notes for the pharmacy (optional) <input name="notes" maxlength="500"></label>
+        <button type="submit" id="rx-save">Save prescription</button>
+      </form>
+      <p id="rx-msg" role="status"></p>
     </section>
 
     <!-- 3. WAITING ROOM DISPLAY: big "now serving" board -->
@@ -69,7 +94,7 @@
     <!-- 5. BEDS: free / occupied beds per ward (backend: routers/beds.py) -->
     <section id="beds" class="screen">
       <h2>Bed availability</h2>
-      <form id="admit-form">
+      <form id="admit-form" data-action>
         <label>Patient name <input name="patient_name" required></label>
         <label>Ward <select name="ward_id" id="ward-select" required></select></label>
         <button type="submit">Admit to a free bed</button>
@@ -89,6 +114,7 @@
 
   <!-- site.js must come first: it draws the header/footer. app.js runs the OPD screens. -->
   <script src="site.js"></script>
+  <script src="pharmacy.js"></script>   <!-- the medicine search box for "Add prescription" -->
   <script src="app.js"></script>
 </body>
 </html>

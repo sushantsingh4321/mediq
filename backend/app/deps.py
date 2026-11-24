@@ -78,5 +78,37 @@ def require_roles(*allowed: Role):
 # Ready-made checks, so routers read like plain English.
 admin_only = require_roles()                                   # only admins
 doctor_only = require_roles(Role.DOCTOR)
-reception_only = require_roles(Role.RECEPTIONIST)
-any_staff = require_roles(Role.RECEPTIONIST, Role.DOCTOR)      # (and admins)
+any_staff = require_roles(Role.DOCTOR)                        # clinical staff: doctors (and admins)
+patient_only = require_roles(Role.PATIENT)                    # Module 5: booking (and admins)
+pharmacist_only = require_roles(Role.PHARMACIST)               # Module 4: counter and stock
+pharmacy_readers = require_roles(Role.PHARMACIST, Role.DOCTOR)  # prescriptions, batches, alerts
+
+
+# ---------------------------------------------------------------- optional login
+
+def get_optional_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
+                      db: Session = Depends(get_db)) -> User | None:
+    """
+    For pages EVERYONE may look at (queue, beds). Returns the logged-in user,
+    or None for a visitor. Never sends 401: a missing, expired or logged-out
+    token just means "visitor", so the page still loads.
+    """
+    if credentials is None:
+        return None
+    try:
+        payload = get_token_payload(credentials, db)
+    except HTTPException:
+        return None
+    return db.get(User, int(payload["sub"]))
+
+
+def is_staff(user: User | None) -> bool:
+    """True for doctors, pharmacists and admins: the people allowed to see full patient names."""
+    return user is not None and user.role in (Role.DOCTOR, Role.PHARMACIST, Role.ADMIN)
+
+
+def initials(name: str | None) -> str | None:
+    """'Asha Patel' -> 'A. P.' Lets visitors see the queue without seeing who is in it."""
+    if not name:
+        return name
+    return " ".join(part[0].upper() + "." for part in name.split())

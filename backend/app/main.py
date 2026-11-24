@@ -16,21 +16,28 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .models import (
     Department, DepartmentCreate, HospitalSummary, QueueStats,
-    Token, TokenCreate, TokenStatus, TokenView,
+    Token, TokenStatus, TokenView,
 )
 from .database import get_db, run_migrations
-from .db_models import Role, User
-from .deps import admin_only, any_staff, doctor_only, reception_only
+from .db_models import AppointmentRow, Role, User
+from .deps import admin_only, doctor_only, get_optional_user, initials, is_staff
+from .queue_view import to_view   # token + people ahead + estimated wait
 from .queueing import estimate_wait_for_position, mmc_metrics
-from .routers import admin, ambulance, auth, beds, callback, schedule, website
+from .routers import (admin, ambulance, appointments, auth, beds, callback, notifications, pharmacy, schedule,
+                      website)
+from .services import appointments as appointments_service
+from .services.notify import notify
+from .services import pharmacy_seed
+from .services.pharmacy import PharmacyError
 from .store import store
 
 # Create or update the database tables before anything uses them.
@@ -56,6 +63,15 @@ app.include_router(auth.router)       # user accounts: signup, login, me, logout
 app.include_router(schedule.router)   # Module 2: doctor schedule     (/api/schedule...)
 app.include_router(admin.router)      # admin console overview        (/api/admin...)
 app.include_router(ambulance.router)  # Module 3: ambulance dispatch  (/api/ambulances...)
+app.include_router(pharmacy.router)   # Module 4: pharmacy            (/api/pharmacy...)
+app.include_router(appointments.router)  # Module 5: self-booking   (/api/appointments, /api/doctors)
+app.include_router(notifications.router)  # Module 5: in-app messages (/api/notifications)
+
+
+@app.exception_handler(PharmacyError)
+def pharmacy_rule_broken(request: Request, exc: PharmacyError):
+    """A pharmacy rule said no (services/pharmacy.py): answer 400 with its plain-words message."""
+    return JSONResponse(status_code=400, content={"detail": str(exc)})
 
 
 # ---------------------------------------------------------------- helpers
@@ -95,18 +111,6 @@ def build_stats(dept: Department) -> QueueStats:
     )
 
 
-def to_view(token: Token) -> TokenView:
-    view = TokenView(**token.model_dump())
-    if token.status == TokenStatus.WAITING:
-        dept = store.departments[token.department_id]
-        waiting = store.tokens_in(dept.id, TokenStatus.WAITING)
-        ahead = [t.id for t in waiting].index(token.id)
-        view.people_ahead = ahead
-        view.estimated_wait_minutes = estimate_wait_for_position(
-            ahead, dept.doctors, dept.avg_consult_minutes)
-    return view
-
-
 # ---------------------------------------------------------------- departments
 
 @app.get("/api/departments", response_model=list[Department], tags=["departments"])
@@ -137,13 +141,20 @@ def department_stats(dept_id: int):
     return build_stats(get_department_or_404(dept_id))
 
 
-@app.get("/api/departments/{dept_id}/queue", response_model=list[TokenView], tags=["departments"],
-         dependencies=[Depends(any_staff)])            # login needed: staff (has patient names)
-def department_queue(dept_id: int):
-    """Everyone waiting or being seen in a department, in order."""
+@app.get("/api/departments/{dept_id}/queue", response_model=list[TokenView], tags=["departments"])
+def department_queue(dept_id: int, user: User | None = Depends(get_optional_user)):  # no login needed
+    """
+    Everyone waiting or being seen in a department, in order.
+    Anyone may look. Staff see full names; everyone else sees initials ("A. P.").
+    """
     get_department_or_404(dept_id)
-    active = [t for t in store.tokens_in(dept_id) if t.status != TokenStatus.DONE]
-    return [to_view(t) for t in active]
+    # Only the live queue: booked (not arrived), cancelled and done tokens aren't in it
+    active = [t for t in store.tokens_in(dept_id) if t.status in (TokenStatus.WAITING, TokenStatus.IN_CONSULTATION)]
+    views = [to_view(t) for t in active]
+    if not is_staff(user):
+        for v in views:
+            v.patient_name = initials(v.patient_name)
+    return views
 
 
 @app.post("/api/departments/{dept_id}/call-next", response_model=Token, tags=["doctor"])
@@ -153,8 +164,9 @@ def call_next(dept_id: int, room: int,
     """
     A doctor in `room` presses "Next patient":
       1. their current patient (if any) is marked DONE
-      2. the oldest WAITING token moves to IN_CONSULTATION in that room
-    This is the FCFS (First-Come-First-Served) queue discipline.
+      2. the first WAITING token moves to IN_CONSULTATION in that room
+    Queue order: slot time (or arrival, without a booking), then priority
+    (store.QUEUE_ORDER). Booked patients who haven't checked in aren't waiting.
 
     Doctors can only do this during their own OPD session, in its department
     and room (Module 2, routers/schedule.py). Admins may always do it, e.g. to
@@ -166,10 +178,18 @@ def call_next(dept_id: int, room: int,
     if user.role == Role.DOCTOR:
         schedule.check_on_duty(db, user, dept_id, room)
 
+    # Late bookings become no-shows first, so their tokens can't be called (Module 5)
+    appointments_service.sweep_no_shows(db)
     # Both steps are saved together in store.call_next (see store.py)
     nxt = store.call_next(dept_id, room, datetime.now())
     if nxt is None:
         raise HTTPException(status_code=404, detail="No patients waiting")
+    # A booked patient gets "It's your turn: Room 3" (banner + SMS hook)
+    booking = db.scalar(select(AppointmentRow).where(AppointmentRow.token_id == nxt.id))
+    if booking is not None:
+        booking.updated_at = appointments_service.now()
+        notify(db, booking, "called")
+        db.commit()
     return nxt
 
 
@@ -186,21 +206,25 @@ def finish_current(dept_id: int, room: int):
 
 # ---------------------------------------------------------------- tokens
 
-@app.post("/api/tokens", response_model=TokenView, status_code=201, tags=["reception"],
-          dependencies=[Depends(reception_only)])      # login needed: receptionist
-def register_patient(data: TokenCreate):
-    """Reception registers a patient and gets a token number."""
-    dept = get_department_or_404(data.department_id)
-    token = store.add_token(data.patient_name.strip(), dept)
-    return to_view(token)
+# Tokens are no longer handed out at a reception desk. They will come from
+# patients' own bookings and from doctors adding walk-ins (store.add_token).
 
-
-@app.get("/api/tokens/{token_id}", response_model=TokenView, tags=["reception"])
-def get_token(token_id: int):
+@app.get("/api/tokens/{token_id}", response_model=TokenView, tags=["tokens"])
+def get_token(token_id: int, user: User | None = Depends(get_optional_user), db: Session = Depends(get_db)):
+    """
+    Anyone with the token's id can see its position and estimated wait.
+    Token ids are just 1, 2, 3..., so the NAME is only shown in full to staff and
+    to the patient whose booking it is; everyone else sees initials ("A. P.").
+    """
     token = store.get_token(token_id)
     if token is None:
         raise HTTPException(status_code=404, detail="Token not found")
-    return to_view(token)
+    view = to_view(token)
+    own = user is not None and db.scalar(select(AppointmentRow.id).where(
+        AppointmentRow.token_id == token_id, AppointmentRow.patient_id == user.id)) is not None
+    if not (is_staff(user) or own):
+        view.patient_name = initials(view.patient_name)
+    return view
 
 
 # ---------------------------------------------------------------- city-wide hook
@@ -255,6 +279,7 @@ if os.getenv("MEDIQ_SEED", "1") == "1":
     seed_demo_data()
     beds.seed_demo_wards()
     ambulance.seed_demo_ambulances()
+    pharmacy_seed.seed_demo_pharmacy()   # 30 medicines + batches, only if the catalogue is empty
 
 
 # ---------------------------------------------------------------- frontend

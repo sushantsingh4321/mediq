@@ -24,8 +24,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..database import SessionLocal, get_db
-from ..db_models import BedRow, WardRow
-from ..deps import admin_only, any_staff
+from ..db_models import BedRow, User, WardRow
+from ..deps import admin_only, any_staff, get_optional_user, initials, is_staff
 
 # An APIRouter is a "mini app": a group of endpoints that main.py plugs in
 # with app.include_router(). prefix= is added in front of every path below,
@@ -150,14 +150,22 @@ def seed_demo_wards():
 
 # ---------------------------------------------------------------- endpoints
 
-@router.get("", response_model=list[WardView], dependencies=[Depends(any_staff)])   # has patient names
-def list_wards(db: Session = Depends(get_db)):
-    """Every ward with every bed. For hospital staff (includes patient names)."""
+@router.get("", response_model=list[WardView])   # no login needed
+def list_wards(db: Session = Depends(get_db), user: User | None = Depends(get_optional_user)):
+    """
+    Every ward with every bed. Anyone may look.
+    Staff see full patient names; everyone else sees initials ("A. P.").
+    """
+    staff = is_staff(user)
     views = []
     for ward in all_wards(db):
         total, occupied, free = count(ward)
+        beds = [Bed.model_validate(b) for b in ward.beds]
+        if not staff:
+            for b in beds:
+                b.patient_name = initials(b.patient_name)
         views.append(WardView(id=ward.id, name=ward.name, total=total, occupied=occupied, free=free,
-                              beds=[Bed.model_validate(b) for b in ward.beds]))
+                              beds=beds))
     return views
 
 
