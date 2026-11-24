@@ -8,103 +8,31 @@
 // The lists (hospitals, cities, specialities, helplines) are NOT typed here.
 // They come from GET /api/site, which reads backend/app/data/site_content.json.
 //
-// Everything is wrapped in (function () { ... })(); so the names inside
-// (api, esc, ...) don't clash with app.js, which has its own `api` and `esc`.
+// Needs core.js first (in <head>). Everything is wrapped in (function () { ... })();
+// so the names inside don't clash with app.js, which has its own `api`.
 
 (function () {
   // ---------------------------------------------------------- helpers
+  // The login/API helpers live in core.js (loaded in every page's <head>).
+  const { api, esc, user, clearToken, goToLogin, checkAccess } = window.mediq;
 
-  // ---------- the login token (step 5) ----------
-  // After login the token is kept in localStorage, so it survives page changes
-  // and browser restarts until it expires (60 min) or you log out.
-  // try/catch: some private-browsing modes block localStorage.
-  const TOKEN_KEY = "mediq_token";
-  function getToken() { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } }
-  function setToken(t) { try { localStorage.setItem(TOKEN_KEY, t); } catch { /* ignore */ } }
-  function clearToken() { try { localStorage.removeItem(TOKEN_KEY); } catch { /* ignore */ } }
-
-  // { Authorization: "Bearer eyJ..." } when logged in, {} when not.
-  function authHeader() {
-    const t = getToken();
-    return t ? { Authorization: `Bearer ${t}` } : {};
-  }
-
-  // Send the user to the login page, remembering where they wanted to go.
-  function goToLogin() {
-    const here = location.pathname + location.search + location.hash;
-    location.href = "/login.html?next=" + encodeURIComponent(here);
-  }
-
-  // Call the backend and return JSON (same idea as api() in app.js).
-  // It sends the login token automatically. A 401 ("not logged in / token
-  // expired") forgets the token and goes to the login page, unless the caller
-  // passes { quiet401: true } (used where being logged out is normal).
-  async function api(path, options = {}) {
-    const { quiet401, ...fetchOptions } = options;
-    const res = await fetch("/api" + path, {
-      headers: { "Content-Type": "application/json", ...authHeader() },
-      ...fetchOptions,
-    });
-    const data = await res.json().catch(() => ({}));
-    if (res.status === 401 && !quiet401 && !path.startsWith("/auth/login") && !path.startsWith("/auth/signup")) {
-      clearToken();
-      goToLogin();
-    }
-    if (!res.ok) {
-      const d = data.detail;
-      // 422 errors give a list of problems; turn them into readable text.
-      const msg = Array.isArray(d) ? d.map(x => x.msg).join("; ") : d || res.statusText;
-      throw new Error(msg);
-    }
-    return data;
-  }
-
-  // Escape text before putting it into HTML (see LEARN.md 3.7).
-  function esc(s) {
-    return String(s).replace(/[&<>"']/g, c =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  }
-
-  // Ask for the site data ONCE. Other scripts (home.js) reuse it through window.mediq.
+  // Ask for the site data ONCE. Other scripts (home.js) reuse it as window.mediq.data.
   const data = api("/site");
-
-  // ---------- who is logged in? (step 5) ----------
-  // A Promise of the user ({full_name, role, ...}), or null when logged out.
-  // quiet401: an expired token on a PUBLIC page just means "logged out", no redirect.
-  const user = getToken()
-    ? api("/auth/me", { quiet401: true }).catch(() => { clearToken(); return null; })
-    : Promise.resolve(null);
-
-  // Can this user see something that needs one of `roles`? Admins can see everything.
-  //   "ok"         yes
-  //   "login"      nobody is logged in
-  //   "forbidden"  logged in, but the wrong role
-  function checkAccess(u, roles) {
-    if (!roles || roles.length === 0) return "ok";
-    if (!u) return "login";
-    return u.role === "admin" || roles.includes(u.role) ? "ok" : "forbidden";
-  }
-
-  // Where each role lands after logging in.
-  const ROLE_HOME = {
-    admin: "/admin.html",
-    doctor: "/index.html#doctor",
-    receptionist: "/index.html#reception",
-    patient: "/",
-  };
-
-  window.mediq = { api, esc, data, user, getToken, setToken, clearToken, authHeader,
-                   goToLogin, checkAccess, ROLE_HOME };
+  window.mediq.data = data;
 
   // The existing OPD screens inside index.html. "#doctor" opens that screen.
   const OPD_PAGES = [
-    { name: "Reception (get a token)", href: "/index.html#reception" },
+    { name: "Book an appointment", href: "/book.html" },
+    { name: "My appointments", href: "/my-appointments.html" },
     { name: "Doctor's desk", href: "/index.html#doctor" },
+    { name: "Doctor: my appointments", href: "/doctor-appointments.html" },
     { name: "Doctor schedule (timetable)", href: "/schedule.html" },
     { name: "Waiting room display", href: "/index.html#display" },
     { name: "Department dashboard", href: "/index.html#dashboard" },
     { name: "Bed availability", href: "/index.html#beds" },
     { name: "Ambulance dispatch", href: "/ambulance.html" },
+    { name: "Pharmacy: medicine catalogue", href: "/pharmacy.html" },
+    { name: "Pharmacy: dispense (staff)", href: "/pharmacy-dispense.html" },
     { name: "Call-back requests (staff)", href: "/staff-callbacks.html" },
     { name: "Admin console", href: "/admin.html" },
   ];
@@ -174,7 +102,7 @@
             <div class="panel">
               <a href="/ambulance.html">Ambulance (staff dispatch)</a>
               <a href="/index.html#beds">Bed Availability</a>
-              <a href="#" data-soon="Pharmacy / Inventory">Pharmacy / Inventory <span class="soon">Soon</span></a>
+              <a href="/pharmacy.html">Pharmacy / Inventory</a>
               <a href="/#enquiry">Health Checkups</a>
             </div>
           </div>
@@ -185,7 +113,7 @@
             </div>
           </div>
           <a class="mobile-only menu-link" href="/callback.html">Request Call Back</a>
-          <a class="btn btn-book" href="/index.html#reception">Book Appointment</a>
+          <a class="btn btn-book" href="/book.html">Book Appointment</a>
         </div>
       </nav>
     </header>`;
@@ -268,7 +196,7 @@
 
   // ---------------------------------------------------------- 2b. account area + page protection
 
-  const ROLE_LABEL = { admin: "Admin", doctor: "Doctor", receptionist: "Reception", patient: "Patient" };
+  const ROLE_LABEL = { admin: "Admin", doctor: "Doctor", pharmacist: "Pharmacy", patient: "Patient" };
 
   user.then(u => {
     const box = document.getElementById("sh-account");
@@ -279,7 +207,7 @@
         : `<a href="/login.html">Log in</a><a href="/signup.html">Sign up</a>`;
     }
 
-    // Pages that need a role say so on <body>, e.g. <body data-require-roles="receptionist">.
+    // Pages that need a role say so on <body>, e.g. <body data-require-roles="doctor">.
     // (The SERVER checks again on every request; this only gives people a friendly page.)
     const needed = (document.body.dataset.requireRoles || "").split(",").filter(Boolean);
     const access = checkAccess(u, needed);

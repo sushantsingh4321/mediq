@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Design system – mediQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="core.js"></script>
+  <style>
+    /* Only for this reference page: swatches and the type ladder */
+    .ds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s3); }
+    .ds-swatch { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+    .ds-swatch div { height: 48px; border-bottom: 1px solid var(--border); }
+    .ds-swatch p { margin: 0; padding: var(--s2); font-size: var(--fs-sm); }
+    .ds-swatch code { color: var(--text-muted); }
+    .ds-section { margin-top: var(--s10); }
+    .ds-pills { display: flex; flex-wrap: wrap; gap: var(--s2); }
+    .ds-type p { margin: 0 0 var(--s2); }
+  </style>
+</head>
+<body>
+  <!-- core.js fills this in: hospital · role · clock · language · theme · user -->
+  <header id="app-bar"></header>
+
+  <main class="ui-page ui-appear">
+    <h1>Design system</h1>
+    <p class="ui-lead">The building blocks every mediQ staff screen is made from. Switch the theme in the
+      blue bar to see dark mode. Explained in LEARN.md, "Design system".</p>
+
+    <section class="ds-section" aria-labelledby="h-colours">
+      <h2 id="h-colours">Colours</h2>
+      <div class="ds-grid" id="swatches"></div>
+    </section>
+
+    <section class="ds-section" aria-labelledby="h-type">
+      <h2 id="h-type">Type scale</h2>
+      <div class="ui-card ds-type">
+        <p style="font-size: var(--fs-2xl); font-weight: var(--fw-bold)">48 GEN-014</p>
+        <p style="font-size: var(--fs-xl); font-weight: var(--fw-semibold)">32 Page title</p>
+        <p style="font-size: var(--fs-lg); font-weight: var(--fw-semibold)">24 Section heading</p>
+        <p style="font-size: var(--fs-md)">19 Patient-facing body text, अब बारी</p>
+        <p style="font-size: var(--fs-base)">16 Staff body text and form labels</p>
+        <p style="font-size: var(--fs-sm); color: var(--text-muted)">14 Hints, table headings, pills</p>
+      </div>
+    </section>
+
+    <section class="ds-section" aria-labelledby="h-status">
+      <h2 id="h-status">Status pills</h2>
+      <p class="ui-lead">Always an icon and a word: never colour alone.</p>
+      <div class="ds-pills" id="pills"></div>
+    </section>
+
+    <section class="ds-section" aria-labelledby="h-buttons">
+      <h2 id="h-buttons">Buttons</h2>
+      <div class="ui-row">
+        <button class="ui-button ui-button--action" type="button">Issue token</button>
+        <button class="ui-button ui-button--secondary" type="button">Print slip</button>
+        <button class="ui-button ui-button--danger" type="button">Skip</button>
+        <button class="ui-button ui-button--secondary" type="button" disabled>Recall</button>
+        <button class="ui-button ui-button--action ui-button--large" type="button">Call next</button>
+      </div>
+    </section>
+
+    <section class="ds-section" aria-labelledby="h-forms">
+      <h2 id="h-forms">Form fields</h2>
+      <form class="ui-card" id="demo-form" novalidate>
+        <div class="ui-row">
+          <div class="ui-field">
+            <label for="d-mobile">Mobile number</label>
+            <input class="ui-input" id="d-mobile" type="tel" inputmode="numeric" aria-describedby="d-mobile-err" aria-invalid="true" value="98765">
+            <span class="ui-field-error" id="d-mobile-err">Enter all 10 digits, for example 98765 43210.</span>
+          </div>
+          <div class="ui-field">
+            <label for="d-name">Patient name</label>
+            <input class="ui-input" id="d-name" autocomplete="off">
+          </div>
+          <div class="ui-field">
+            <label for="d-dept">Department</label>
+            <select class="ui-input" id="d-dept"><option>General Medicine</option><option>Paediatrics</option></select>
+          </div>
+          <div class="ui-field">
+            <label for="d-abha">ABHA number <span class="ui-hint">(optional)</span></label>
+            <input class="ui-input" id="d-abha" aria-describedby="d-abha-hint">
+            <span class="ui-hint" id="d-abha-hint">14 digits, from the patient's ABHA card</span>
+          </div>
+        </div>
+        <button class="ui-button ui-button--action" type="submit">Issue token</button>
+      </form>
+    </section>
+
+    <section class="ds-section" aria-labelledby="h-messages">
+      <h2 id="h-messages">Messages, empty and loading states</h2>
+      <div id="msg-error"></div>
+      <div id="msg-success"></div>
+      <div class="ui-card" id="empty-demo"></div>
+      <div id="loading-demo"></div>
+      <button class="ui-button ui-button--secondary" type="button" id="toast-demo">Show a toast</button>
+    </section>
+
+    <section class="ds-section" aria-labelledby="h-table">
+      <h2 id="h-table">Queue table</h2>
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <caption class="ui-sr-only">Example queue</caption>
+          <thead><tr><th scope="col">Token</th><th scope="col">Patient</th><th scope="col">Status</th><th scope="col">Waiting</th></tr></thead>
+          <tbody id="demo-rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const m = window.mediq;
+    m.appBar({ role: "Design system", place: "Reference" });
+
+    // Colour swatches, read from the live CSS variables (so dark mode shows dark values)
+    const TOKENS = ["--page", "--surface", "--text", "--text-muted", "--border", "--border-input", "--appbar",
+                    "--link", "--action", "--error", "--focus", "--board-bg"];
+    function drawSwatches() {
+      const css = getComputedStyle(document.documentElement);
+      document.getElementById("swatches").innerHTML = TOKENS.map(t => `
+        <div class="ds-swatch"><div style="background: var(${t})"></div>
+          <p>${t}<br><code>${css.getPropertyValue(t).trim()}</code></p></div>`).join("");
+    }
+    drawSwatches();
+    document.addEventListener("mediq:theme", drawSwatches);
+
+    document.getElementById("pills").innerHTML =
+      ["waiting", "called", "in_consultation", "done", "skipped"].map(s => m.pill(s)).join("");
+
+    m.message(document.getElementById("msg-error"), { type: "error", title: "Token not issued",
+      text: "The mobile number has 5 digits. Enter all 10 digits, for example 98765 43210." });
+    m.message(document.getElementById("msg-success"), { type: "success", title: "Token GEN-014 issued",
+      text: "4 people ahead · about 12 minutes · Room 3" });
+    m.empty(document.getElementById("empty-demo"), "No one is waiting in General Medicine.");
+    m.loading(document.getElementById("loading-demo"), "Loading today's queue…");
+    document.getElementById("toast-demo").addEventListener("click", () => m.toast("Token GEN-014 issued"));
+    document.getElementById("demo-form").addEventListener("submit", e => e.preventDefault());
+
+    document.getElementById("demo-rows").innerHTML = [
+      ["GEN-011", "Asha Patel", "in_consultation", "18 min"],
+      ["GEN-012", "Ravi Kumar", "called", "15 min"],
+      ["GEN-013", "Meena Joshi", "waiting", "9 min"],
+      ["GEN-010", "Sunil Rao", "done", "22 min"],
+      ["GEN-009", "Farah Khan", "skipped", "31 min"],
+    ].map(([t, n, s, w]) => `<tr><td><strong>${t}</strong></td><td>${n}</td><td>${m.pill(s)}</td><td>${w}</td></tr>`).join("");
+  </script>
+</body>
+</html>

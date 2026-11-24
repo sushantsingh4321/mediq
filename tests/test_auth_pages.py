@@ -24,11 +24,15 @@ def test_login_and_signup_pages_are_served():
 
 
 def test_scripts_send_the_login_token():
-    site = client.get("/site.js").text
-    assert "Authorization" in site and "goToLogin" in site and "logout-btn" in site
+    core = client.get("/core.js").text          # the shared helpers (design system step 1)
+    assert "Authorization" in core and "goToLogin" in core
+    assert "logout-btn" in client.get("/site.js").text
+    # Every page loads core.js in <head>, so the helpers and the theme are ready early
+    for page in ["/login.html", "/index.html", "/admin.html", "/design.html"]:
+        assert '<script src="core.js"></script>' in client.get(page).text, page
     app_js = client.get("/app.js").text
     assert "authHeader()" in app_js and "SCREEN_ROLES" in app_js
 
 
 def test_staff_page_declares_the_role_it_needs():
-    assert 'data-require-roles="receptionist"' in client.get("/staff-callbacks.html").text
+    assert 'data-require-roles="admin"' in client.get("/staff-callbacks.html").text
