@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create an account – mediQ Health</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="auth-page">
+    <h1 class="page-title">Create an account</h1>
+    <p class="lead">For patients. Hospital staff accounts are created by an admin.</p>
+
+    <form id="signup-form" class="enquiry-form" novalidate>
+      <p id="form-error" class="form-error" role="alert"></p>
+      <label>Full name
+        <input name="full_name" required maxlength="100" autocomplete="name" aria-describedby="full_name-error">
+        <span class="field-error" id="full_name-error"></span>
+      </label>
+      <label>Email
+        <input name="email" type="email" required autocomplete="email" aria-describedby="email-error">
+        <span class="field-error" id="email-error"></span>
+      </label>
+      <label>Mobile number (optional)
+        <span class="phone-row">
+          <span class="prefix">+91</span>
+          <input name="phone" type="tel" inputmode="numeric" maxlength="16" placeholder="98765 43210"
+                 autocomplete="tel-national" aria-label="Mobile number (optional)" aria-describedby="phone-error">
+        </span>
+        <span class="field-error" id="phone-error"></span>
+      </label>
+      <label>Password
+        <input name="password" type="password" required minlength="8" autocomplete="new-password"
+               aria-describedby="password-hint password-error">
+        <span class="hint-line" id="password-hint">At least 8 characters.</span>
+        <span class="field-error" id="password-error"></span>
+      </label>
+      <label>Confirm password
+        <input name="confirm" type="password" required autocomplete="new-password" aria-describedby="confirm-error">
+        <span class="field-error" id="confirm-error"></span>
+      </label>
+      <button type="submit">Create account</button>
+    </form>
+    <p class="auth-switch">Already have an account? <a href="/login.html">Log in</a></p>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="site.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>
