@@ -30,7 +30,8 @@ def test_tests_use_their_own_database():
 
 def test_users_table_has_the_right_columns():
     columns = {c["name"] for c in inspect(engine).get_columns("users")}
-    assert columns == {"id", "full_name", "email", "phone", "hashed_password", "role", "created_at"}
+    assert columns == {"id", "full_name", "email", "phone", "hashed_password", "role", "created_at",
+                       "auto_accept"}   # auto_accept: doctors only (self-booking, migration 0009)
 
 
 def test_migrations_match_the_models():
