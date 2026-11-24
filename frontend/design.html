@@ -6,7 +6,7 @@
   <title>Design system – mediQ</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="style.css">
   <script src="core.js"></script>
   <style>
@@ -117,8 +117,9 @@
     m.appBar({ role: "Design system", place: "Reference" });
 
     // Colour swatches, read from the live CSS variables (so dark mode shows dark values)
-    const TOKENS = ["--page", "--surface", "--text", "--text-muted", "--border", "--border-input", "--appbar",
-                    "--link", "--action", "--error", "--focus", "--board-bg"];
+    const TOKENS = ["--night", "--ink", "--cobalt", "--sky", "--ice",                 // the world (DESIGN.md)
+                    "--page", "--surface", "--tint", "--text", "--text-muted", "--border", "--border-input",
+                    "--appbar", "--link", "--action", "--error", "--focus"];
     function drawSwatches() {
       const css = getComputedStyle(document.documentElement);
       document.getElementById("swatches").innerHTML = TOKENS.map(t => `
