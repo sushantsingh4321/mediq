@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Appointments – mediQ Doctor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="core.js"></script>
+</head>
+<body>
+  <!-- Module 5: a doctor's own bookings, grouped by day. Accept / reject, and the
+       auto-accept switch. Backend: routers/appointments.py (/api/doctor/...) -->
+  <header id="app-bar"></header>
+  <nav id="dr-nav" class="ui-subnav" aria-label="Doctor">
+    <a href="/index.html#doctor">Doctor's desk</a>
+    <a href="/doctor-appointments.html" aria-current="page">Appointments</a>
+  </nav>
+
+  <main class="ui-page ui-appear">
+    <h1>Appointments</h1>
+    <p class="ui-lead">Your bookings for the next two weeks. Patients see your answer on their phone straight away.</p>
+
+    <!-- Walk-ins: there's no reception desk, so the doctor adds someone who just turned up -->
+    <section class="ui-card" aria-labelledby="h-walkin" style="margin-bottom: var(--s4)">
+      <h2 id="h-walkin">Add a walk-in patient</h2>
+      <p class="ui-hint">For someone who came without a booking. They're checked in straight away and join the queue
+        by the time they arrived.</p>
+      <div id="walkin-msg" hidden></div>
+      <form class="ph-form" id="walkin-form" novalidate>
+        <div class="ui-row">
+          <div class="ui-field"><label for="w-name">Patient name</label>
+            <input class="ui-input" id="w-name" maxlength="100" autocomplete="off" required></div>
+          <div class="ui-field"><label for="w-dept">Department</label>
+            <select class="ui-input" id="w-dept"></select></div>
+          <div class="ui-field" style="flex-basis: 280px"><label for="w-reason">Reason <span class="ui-hint">(optional)</span></label>
+            <input class="ui-input" id="w-reason" maxlength="500" placeholder="For example: chest pain since morning"></div>
+        </div>
+        <button class="ui-button ui-button--action" type="submit">Add to queue</button>
+      </form>
+    </section>
+
+    <section class="ui-card" aria-labelledby="h-settings">
+      <h2 id="h-settings" class="ui-sr-only">Settings</h2>
+      <label class="ph-check"><input type="checkbox" id="auto-accept"> Accept bookings automatically</label>
+      <p class="ui-hint" id="auto-hint"></p>
+    </section>
+
+    <div id="msg" hidden></div>
+    <form class="ph-form ph-toolbar" id="filters" style="margin-top: var(--s6)">
+      <div class="ui-field ui-field--narrow">
+        <label for="from">From</label>
+        <input class="ui-input" id="from" type="date">
+      </div>
+      <label class="ph-check"><input type="checkbox" id="show-closed"> Show cancelled, rejected and finished</label>
+    </form>
+    <div id="requests-note" hidden></div>
+    <div id="days" aria-live="polite"></div>
+  </main>
+
+  <script src="doctor-appointments.js"></script>
+</body>
+</html>
