@@ -1,0 +1,66 @@
+# .gitignore: files git should NEVER save or upload.
+# One pattern per line. "folder/" = a whole folder, "*.log" = any file ending in .log,
+# "!name" = an exception (DO save this one even though a rule above matches it).
+
+# ---------------------------------------------------------------- secrets
+# Passwords, SECRET_KEY, Twilio/Groq keys. Never commit these.
+.env
+.env.*
+# ...but DO commit the template with no real values in it
+!.env.example
+*.pem
+*.key
+
+# ---------------------------------------------------------------- local data
+# The SQLite database: real patient names and accounts, not code.
+*.db
+*.sqlite
+*.sqlite3
+# Temporary files SQLite makes next to the database while it works
+*.db-journal
+*.db-wal
+*.db-shm
+# Future call recordings, transcripts and PDF reports (patient data)
+recordings/
+transcripts/
+reports/
+
+# ---------------------------------------------------------------- Python
+# The virtual environment: big, and anyone can rebuild it with
+# "pip install -r requirements.txt"
+.venv/
+venv/
+env/
+# Compiled Python files Python creates by itself
+__pycache__/
+*.py[cod]
+# Packaging / build output
+build/
+dist/
+*.egg-info/
+
+# ---------------------------------------------------------------- tests
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# ---------------------------------------------------------------- logs
+*.log
+nohup.out
+
+# ---------------------------------------------------------------- operating system
+# macOS folder settings (that hidden .DS_Store file)
+.DS_Store
+._*
+# Windows
+Thumbs.db
+Desktop.ini
+
+# ---------------------------------------------------------------- editors
+.vscode/
+.idea/
+*.swp
+*~
+# Claude Code's personal settings for this computer
+.claude/settings.local.json
