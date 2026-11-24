@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Call-back requests (staff) – mediQ Health</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-require-roles="receptionist">
+  <div id="site-header"></div>
+
+  <!-- Staff list. Reads GET /api/callback every 5 seconds. -->
+  <main>
+    <h1 class="page-title">Call-back requests</h1>
+    <p class="lead">Newest first. Updates every 5 seconds.
+      <span class="badge pending">pending</span> saved
+      <span class="badge calling">calling</span> in progress
+      <span class="badge done">done</span> patient connected
+      <span class="badge failed">failed</span> call the patient by hand
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>#</th><th>Requested</th><th>Name</th><th>Mobile</th><th>Status</th><th>Details</th></tr></thead>
+        <tbody id="callback-rows"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="site.js"></script>
+  <script src="staff-callbacks.js"></script>
+</body>
+</html>

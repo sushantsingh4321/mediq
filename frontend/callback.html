@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Request a call back – mediQ Health</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <!-- Patient form. Saved by POST /api/callback (backend: routers/callback.py) -->
+  <main class="page-narrow">
+    <h1 class="page-title">Request a call back</h1>
+    <p class="lead">Leave your mobile number. A mediQ Health team member will call you shortly.</p>
+
+    <form id="callback-form" class="enquiry-form">
+      <label class="full">Your name <input name="name" required maxlength="100" autocomplete="name"></label>
+      <label class="full">Mobile number (India)
+        <span class="phone-row">
+          <span class="prefix">+91</span>
+          <input name="mobile" type="tel" inputmode="numeric" required maxlength="16"
+                 placeholder="98765 43210" autocomplete="tel-national" aria-label="10-digit mobile number">
+        </span>
+      </label>
+      <label class="consent full">
+        <input type="checkbox" name="consent" required>
+        I agree that mediQ Health may call me on this number.
+      </label>
+      <button type="submit" class="full">Call me back</button>
+      <p id="callback-msg" class="full" role="status"></p>
+    </form>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="site.js"></script>
+  <script src="callback.js"></script>
+</body>
+</html>
