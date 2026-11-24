@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Doctor schedule – mediQ Health</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <!-- Module 2. Public timetable; admins also get the "Add OPD session" form.
+       Backend: routers/schedule.py -->
+  <main class="wide">
+    <h1 class="page-title">Doctor schedule</h1>
+    <p class="lead">Weekly OPD sessions. <span id="hospital-time"></span></p>
+
+    <div class="schedule-bar">
+      <label>Department <select id="dept-filter"><option value="">All departments</option></select></label>
+    </div>
+
+    <section class="on-duty" aria-live="polite">
+      <h2><span class="live-dot"></span> On duty now</h2>
+      <div id="on-duty-list" class="chips"><span class="muted">Loading…</span></div>
+    </section>
+
+    <!-- Only shown to admins (schedule.js) -->
+    <section id="admin-panel" hidden>
+      <h2>Add an OPD session</h2>
+      <form id="slot-form">
+        <label>Doctor <select name="doctor_id" required></select></label>
+        <label>Department <select name="department_id" required></select></label>
+        <label>Day <select name="weekday" required></select></label>
+        <label>From <input name="start_time" type="time" value="09:00" required></label>
+        <label>To <input name="end_time" type="time" value="13:00" required></label>
+        <label>Room <input name="room" type="number" min="1" value="1" required></label>
+        <button type="submit">Add session</button>
+      </form>
+      <p id="slot-msg"></p>
+      <p class="hint" id="no-doctors" hidden>No doctor accounts yet. Create one first
+        (<code>POST /api/auth/users</code> with role "doctor" on <a href="/docs">/docs</a>).</p>
+    </section>
+
+    <div id="timetable" class="timetable"></div>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="site.js"></script>
+  <script src="schedule.js"></script>
+</body>
+</html>

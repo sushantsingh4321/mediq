@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin console – mediQ Health</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<!-- data-require-roles="admin": site.js sends anyone else to login or shows "No access".
+     The server checks again on every request (deps.py: admin_only). -->
+<body data-require-roles="admin">
+  <div id="site-header"></div>
+
+  <main class="wide">
+    <h1 class="page-title">Admin console</h1>
+    <p class="lead">Everything in one place. Counts refresh every 10 seconds. <span id="updated"></span></p>
+
+    <!-- Jump links to each section -->
+    <nav class="console-nav" aria-label="Admin sections">
+      <a href="#overview">Overview</a>
+      <a href="#accounts">Accounts</a>
+      <a href="#enquiries">Enquiries</a>
+      <a href="#callbacks">Call-backs</a>
+      <a href="#tools">Other tools</a>
+    </nav>
+
+    <!-- 1. OVERVIEW -->
+    <section id="overview" class="console-section">
+      <h2>Overview</h2>
+      <div id="tiles" class="stat-tiles"><p class="muted">Loading…</p></div>
+    </section>
+
+    <!-- 2. ACCOUNTS -->
+    <section id="accounts" class="console-section">
+      <h2>Accounts</h2>
+      <form id="new-user-form">
+        <label>Full name <input name="full_name" required maxlength="100"></label>
+        <label>Email <input name="email" type="email" required></label>
+        <label>Mobile (optional) <input name="phone" type="tel" placeholder="98765 43210"></label>
+        <label>Password <input name="password" type="password" required minlength="8" autocomplete="new-password"></label>
+        <label>Role
+          <select name="role">
+            <option value="doctor">Doctor</option>
+            <option value="receptionist">Receptionist</option>
+            <option value="admin">Admin</option>
+            <option value="patient">Patient</option>
+          </select>
+        </label>
+        <button type="submit">Create account</button>
+      </form>
+      <p id="user-msg" role="status"></p>
+
+      <div class="table-tools">
+        <input type="search" id="user-search" placeholder="Search name, email or phone" aria-label="Search accounts">
+        <select id="role-filter" aria-label="Filter by role">
+          <option value="">All roles</option>
+          <option value="admin">Admins</option>
+          <option value="doctor">Doctors</option>
+          <option value="receptionist">Receptionists</option>
+          <option value="patient">Patients</option>
+        </select>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Mobile</th><th>Role</th><th>Joined</th></tr></thead>
+          <tbody id="user-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 3. ENQUIRIES (home-page form) -->
+    <section id="enquiries" class="console-section">
+      <h2>Enquiries</h2>
+      <div class="table-tools">
+        <input type="search" id="enquiry-search" placeholder="Search name, mobile or speciality" aria-label="Search enquiries">
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>#</th><th>Received</th><th>Name</th><th>Mobile</th><th>Speciality</th></tr></thead>
+          <tbody id="enquiry-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4. CALL-BACKS -->
+    <section id="callbacks" class="console-section">
+      <h2>Call-back requests</h2>
+      <div class="table-tools">
+        <input type="search" id="callback-search" placeholder="Search name or mobile" aria-label="Search call-backs">
+        <select id="callback-filter" aria-label="Filter by status">
+          <option value="">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="calling">Calling</option>
+          <option value="done">Done</option>
+          <option value="failed">Failed</option>
+        </select>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>#</th><th>Requested</th><th>Name</th><th>Mobile</th><th>Status</th><th>Details</th></tr></thead>
+          <tbody id="callback-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5. LINKS to the other admin screens -->
+    <section id="tools" class="console-section">
+      <h2>Other tools</h2>
+      <div class="service-cards">
+        <a class="service-card" href="/index.html#dashboard"><h3>Department dashboard</h3><p>Doctors, consult time and arrivals per department; queue maths.</p></a>
+        <a class="service-card" href="/schedule.html"><h3>Doctor schedule</h3><p>Add and remove weekly OPD sessions.</p></a>
+        <a class="service-card" href="/index.html#beds"><h3>Beds</h3><p>Admit and discharge, per ward.</p></a>
+        <a class="service-card" href="/index.html#display"><h3>Waiting room board</h3><p>The "now serving" screen.</p></a>
+        <a class="service-card" href="/docs"><h3>API docs</h3><p>Every endpoint, for testing.</p></a>
+      </div>
+    </section>
+
+    <p class="hint">All of this is saved in the database (mediq.db) and survives a server restart.</p>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="site.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

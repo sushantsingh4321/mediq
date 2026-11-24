@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ambulance dispatch – mediQ Health</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<!-- Module 3. Staff only (receptionist, doctor, admin). Backend: routers/ambulance.py -->
+<body data-require-roles="receptionist,doctor">
+  <div id="site-header"></div>
+
+  <main class="wide">
+    <h1 class="page-title">Ambulance dispatch</h1>
+    <p class="lead" id="fleet-summary">Loading…</p>
+
+    <!-- 1. Log a new request (usually from a phone call) -->
+    <section class="console-section">
+      <h2>New request</h2>
+      <form id="trip-form">
+        <label>Patient name <input name="patient_name" required maxlength="100"></label>
+        <label>Contact mobile <input name="contact_phone" type="tel" required placeholder="98765 43210"></label>
+        <label class="grow">Pickup address <input name="pickup" required minlength="3" maxlength="200"
+               placeholder="House, street, landmark"></label>
+        <label class="grow">Take to <input name="destination" maxlength="200" value="mediQ City Hospital, Emergency"></label>
+        <label class="grow">Notes <input name="notes" maxlength="300" placeholder="e.g. elderly, chest pain"></label>
+        <label class="check"><input type="checkbox" name="send_now" checked> Send the first free ambulance now</label>
+        <button type="submit">Log request</button>
+      </form>
+      <p id="trip-msg" role="status"></p>
+    </section>
+
+    <!-- 2. Open trips: waiting for an ambulance, or on the way -->
+    <section class="console-section">
+      <h2>Open trips</h2>
+      <div id="open-trips" class="trip-list"><p class="muted">Loading…</p></div>
+    </section>
+
+    <!-- 3. The fleet -->
+    <section class="console-section">
+      <h2>Fleet</h2>
+      <div id="fleet" class="fleet"></div>
+    </section>
+
+    <!-- 4. Recently finished -->
+    <section class="console-section">
+      <h2>Recently finished</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>#</th><th>Patient</th><th>Pickup → destination</th><th>Ambulance</th><th>Result</th><th>Finished</th></tr></thead>
+          <tbody id="past-trips"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5. Admins: add an ambulance -->
+    <section class="console-section" id="add-ambulance" hidden>
+      <h2>Add an ambulance</h2>
+      <form id="ambulance-form">
+        <label>Code <input name="code" required maxlength="10" placeholder="AMB-05"></label>
+        <label>Vehicle number <input name="vehicle_number" required maxlength="20"></label>
+        <label>Driver <input name="driver_name" required maxlength="100"></label>
+        <label>Driver mobile <input name="driver_phone" type="tel" required></label>
+        <label class="grow">Location <input name="location" maxlength="200" value="Hospital ambulance bay"></label>
+        <button type="submit">Add</button>
+      </form>
+      <p id="ambulance-msg" role="status"></p>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="site.js"></script>
+  <script src="ambulance.js"></script>
+</body>
+</html>
