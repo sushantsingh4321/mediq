@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Book an appointment – mediQ Health</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <!-- core.js: theme (before the page is drawn) + shared helpers -->
+  <script src="core.js"></script>
+</head>
+<body>
+  <!-- Module 5: a patient books their own appointment, in 5 small steps.
+       Backend: routers/appointments.py. Rules: services/appointments.py -->
+  <header id="app-bar"></header>
+  <nav id="pt-nav" class="ui-subnav"></nav>
+
+  <main class="pt-page ui-appear">
+    <h1>Book an appointment</h1>
+    <p class="ui-lead">Choose a department, a doctor and a time. It takes about a minute.</p>
+
+    <form class="ph-form" id="book-form" novalidate>
+      <section class="pt-step" aria-labelledby="h-dept">
+        <h2 id="h-dept"><span class="pt-num" aria-hidden="true">1</span>Department</h2>
+        <fieldset class="pt-choices" id="depts" aria-labelledby="h-dept"></fieldset>
+      </section>
+
+      <section class="pt-step" id="step-doctor" aria-labelledby="h-doctor" hidden>
+        <h2 id="h-doctor"><span class="pt-num" aria-hidden="true">2</span>Doctor</h2>
+        <fieldset class="pt-choices pt-choices--wide" id="doctors" aria-labelledby="h-doctor"></fieldset>
+      </section>
+
+      <section class="pt-step" id="step-day" aria-labelledby="h-day" hidden>
+        <h2 id="h-day"><span class="pt-num" aria-hidden="true">3</span>Day</h2>
+        <fieldset class="pt-choices" id="days" aria-labelledby="h-day"></fieldset>
+      </section>
+
+      <section class="pt-step" id="step-time" aria-labelledby="h-time" hidden>
+        <h2 id="h-time"><span class="pt-num" aria-hidden="true">4</span>Time</h2>
+        <p class="ui-hint" id="time-hint"></p>
+        <fieldset class="pt-choices pt-choices--times" id="times" aria-labelledby="h-time" aria-describedby="time-hint"></fieldset>
+      </section>
+
+      <section class="pt-step" id="step-reason" aria-labelledby="h-reason" hidden>
+        <h2 id="h-reason"><span class="pt-num" aria-hidden="true">5</span>What's wrong?</h2>
+        <div class="ui-field">
+          <label for="reason">Your symptoms, in your own words</label>
+          <textarea class="ui-input" id="reason" maxlength="500" aria-describedby="reason-hint"
+                    placeholder="For example: fever and sore throat for 3 days"></textarea>
+          <span class="ui-hint" id="reason-hint">This helps the doctor prepare. <span id="reason-count">0</span>/500</span>
+        </div>
+        <div class="pt-summary" id="summary" aria-live="polite"></div>
+        <div id="book-msg" hidden></div>
+        <button class="ui-button ui-button--action ui-button--large" type="submit" id="book-btn">Book appointment</button>
+      </section>
+    </form>
+  </main>
+
+  <script src="patient.js"></script>
+  <script src="book.js"></script>
+</body>
+</html>

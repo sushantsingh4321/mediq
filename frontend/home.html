@@ -4,7 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>mediQ Health – Hospitals, OPD queues and bed availability</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="style.css">
+  <!-- core.js: theme (before the page is drawn) + shared helpers -->
+  <script src="core.js"></script>
 </head>
 <body>
   <!-- site.js draws the top strip, header and menu in here -->
@@ -20,7 +25,7 @@
           <h1>Care that doesn't keep you waiting</h1>
           <p>Live OPD queues, real-time bed availability and one helpline for every mediQ hospital.</p>
           <div class="hero-cta">
-            <a class="btn btn-book" href="/index.html#reception">Book Appointment</a>
+            <a class="btn btn-book" href="/book.html">Book Appointment</a>
             <a class="btn btn-outline" href="/callback.html">Request a call back</a>
           </div>
         </div>
@@ -52,10 +57,10 @@
       <h2>Our services</h2>
       <p class="lead">Everything you need on one network, updated live.</p>
       <div class="service-cards">
-        <a class="service-card" href="/index.html#reception">
+        <a class="service-card" href="/index.html#display">
           <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4z"/><path d="M10 7v10" stroke-dasharray="2 2"/></svg></span>
           <h3>OPD Queue</h3>
-          <p>Get a token, see people ahead and your estimated wait.</p>
+          <p>See who is being called now and how long the wait is.</p>
           <span class="stat" id="stat-opd">…</span>
         </a>
         <a class="service-card" href="/index.html#beds">
@@ -76,11 +81,11 @@
           <p>Request, dispatch and track ambulances.</p>
           <span class="stat" id="stat-amb">…</span>
         </a>
-        <a class="service-card" href="#" data-soon="Pharmacy / Inventory">
+        <a class="service-card" href="/pharmacy.html">
           <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 4h6v3H9zM12 11v5M9.5 13.5h5"/></svg></span>
-          <h3>Inventory</h3>
+          <h3>Pharmacy</h3>
           <p>Medicines and supplies, with low-stock and expiry alerts.</p>
-          <span class="stat later">Coming soon</span>
+          <span class="stat">Search medicines</span>
         </a>
       </div>
     </section>

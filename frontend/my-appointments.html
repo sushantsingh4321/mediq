@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My appointments – mediQ Health</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="core.js"></script>
+</head>
+<body>
+  <!-- Module 5: the patient's own bookings, refreshed every 15 seconds.
+       Backend: GET /api/appointments/me, POST /api/appointments/{id}/cancel -->
+  <header id="app-bar"></header>
+  <nav id="pt-nav" class="ui-subnav"></nav>
+
+  <main class="pt-page ui-appear">
+    <h1>My appointments</h1>
+    <p class="ui-lead">This page updates by itself. <a href="/book.html">Book another appointment</a></p>
+    <div id="msg" hidden></div>
+    <section aria-labelledby="h-upcoming">
+      <h2 id="h-upcoming" class="ui-sr-only">Upcoming</h2>
+      <ul class="pt-list" id="upcoming" aria-live="polite"></ul>
+    </section>
+    <section aria-labelledby="h-past" id="past-section" hidden>
+      <h2 id="h-past" class="pt-step">Past, cancelled and not accepted</h2>
+      <ul class="pt-list" id="past"></ul>
+    </section>
+  </main>
+
+  <script src="patient.js"></script>
+  <script src="my-appointments.js"></script>
+</body>
+</html>
