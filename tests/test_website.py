@@ -23,7 +23,9 @@ def post_enquiry(**changes):
 def test_site_content_comes_from_the_data_file():
     d = client.get("/api/site").json()
     assert d["brand"] == "mediQ Health"
-    assert len(d["emergency_numbers"]) == 5
+    # India's real public numbers (108 ambulance, 112 all emergencies), never invented phone numbers
+    assert {e["number"] for e in d["emergency_numbers"]} == {"108", "112"}
+    assert "411000" not in d["head_office"]                  # no postcodes in demo addresses
     assert d["default_country_code"] == "+91"
     assert all(h["state"] for h in d["hospitals"])          # menu groups by state
     assert all(s["conditions"] for s in d["specialities"])  # each speciality has conditions

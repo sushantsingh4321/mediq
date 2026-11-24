@@ -41,8 +41,8 @@ class Helpline(BaseModel):
 
 
 class EmergencyNumber(BaseModel):
-    city: str
-    number: str
+    label: str          # "Ambulance, anywhere in India"
+    number: str         # "108": India's real public emergency numbers, not invented ones
 
 
 class Hospital(BaseModel):
