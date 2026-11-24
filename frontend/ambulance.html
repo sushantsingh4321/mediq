@@ -4,10 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Ambulance dispatch – mediQ Health</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="style.css">
+  <!-- core.js: theme (before the page is drawn) + shared helpers -->
+  <script src="core.js"></script>
 </head>
-<!-- Module 3. Staff only (receptionist, doctor, admin). Backend: routers/ambulance.py -->
-<body data-require-roles="receptionist,doctor">
+<!-- Module 3. Staff only (doctor, admin). Backend: routers/ambulance.py -->
+<body data-require-roles="doctor">
   <div id="site-header"></div>
 
   <main class="wide">

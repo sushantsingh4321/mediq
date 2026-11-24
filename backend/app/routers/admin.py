@@ -48,7 +48,7 @@ class Overview(BaseModel):
     callbacks: dict[str, int]       # {"pending": 0, "calling": 1, "done": 4, "failed": 0}
     enquiries_total: int
     enquiries_today: int
-    accounts: dict[str, int]        # {"patient": 12, "doctor": 3, "receptionist": 2, "admin": 1}
+    accounts: dict[str, int]        # {"patient": 12, "doctor": 3, "pharmacist": 1, "admin": 1}
 
 
 @router.get("/overview", response_model=Overview)

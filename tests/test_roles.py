@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 from backend.app.main import app
 from backend.app.routers import schedule as schedule_module
 from backend.app.routers.auth import seed_first_admin
-from helpers import admin_headers, bearer, login_headers
+from helpers import admin_headers, bearer, login_headers, queue_token
 
 client = TestClient(app)          # NOT logged in; each test passes headers itself
 PASSWORD = "staff-password-1"
@@ -34,7 +34,7 @@ def make_patient(email):
 
 # One account of each kind, shared by the tests in this file
 DOCTOR = make_account("doctor@roles.example", "doctor")
-RECEPTION = make_account("reception@roles.example", "receptionist")
+PHARMACIST = make_account("pharmacy@roles.example", "pharmacist")
 PATIENT = make_patient("patient@roles.example")
 ADMIN = admin_headers()
 
@@ -55,12 +55,12 @@ def test_first_admin_is_created_from_env_once():
 
 # ---------- who can create staff accounts ----------
 
-def test_only_admin_creates_doctor_and_receptionist_accounts():
+def test_only_admin_creates_staff_accounts():
     new = {"full_name": "Dr X", "email": "drx@roles.example", "password": PASSWORD, "role": "doctor"}
     assert client.post("/api/auth/users", json=new).status_code == 401                    # not logged in
     assert client.post("/api/auth/users", json=new, headers=PATIENT).status_code == 403
     assert client.post("/api/auth/users", json=new, headers=DOCTOR).status_code == 403
-    assert client.post("/api/auth/users", json=new, headers=RECEPTION).status_code == 403
+    assert client.post("/api/auth/users", json=new, headers=PHARMACIST).status_code == 403
     created = client.post("/api/auth/users", json=new, headers=ADMIN)
     assert created.status_code == 201 and created.json()["role"] == "doctor"
 
@@ -77,7 +77,7 @@ def test_call_next_needs_a_doctor():
     url = "/api/departments/1/call-next?room=1"
     assert client.post(url).status_code == 401
     assert client.post(url, headers=PATIENT).status_code == 403
-    denied = client.post(url, headers=RECEPTION)
+    denied = client.post(url, headers=PHARMACIST)
     assert denied.status_code == 403 and denied.json()["detail"] == "This needs a doctor account."
     # A doctor gets past the ROLE check, but (Module 2) only during their own
     # OPD session. This doctor has no sessions, so it's still 403, with a reason.
@@ -86,14 +86,13 @@ def test_call_next_needs_a_doctor():
     assert client.post("/api/departments/1/finish?room=1", headers=PATIENT).status_code == 403
 
 
-# ---------- reception screen ----------
+# ---------- the reception desk was removed ----------
 
-def test_registering_patients_needs_a_receptionist():
+def test_reception_role_and_route_are_gone():
     body = {"patient_name": "Walk-in", "department_id": 1}
-    assert client.post("/api/tokens", json=body).status_code == 401
-    assert client.post("/api/tokens", json=body, headers=PATIENT).status_code == 403
-    assert client.post("/api/tokens", json=body, headers=DOCTOR).status_code == 403
-    assert client.post("/api/tokens", json=body, headers=RECEPTION).status_code == 201
+    assert client.post("/api/tokens", json=body, headers=ADMIN).status_code in (404, 405)
+    new = {"full_name": "Desk", "email": "desk@roles.example", "password": PASSWORD, "role": "receptionist"}
+    assert client.post("/api/auth/users", json=new, headers=ADMIN).status_code == 422   # not a role any more
 
 
 # ---------- dashboard ----------
@@ -108,12 +107,26 @@ def test_changing_departments_needs_an_admin():
 # ---------- staff lists with names and phone numbers ----------
 
 def test_staff_lists_are_hidden_from_patients_and_strangers():
-    for url in ["/api/callback", "/api/enquiries", "/api/wards", "/api/departments/1/queue"]:
+    # Phone numbers and messages: staff only
+    for url in ["/api/callback", "/api/enquiries"]:
         assert client.get(url).status_code == 401, url
         assert client.get(url, headers=PATIENT).status_code == 403, url
         assert client.get(url, headers=ADMIN).status_code == 200, url
-    assert client.get("/api/callback", headers=RECEPTION).status_code == 200
-    assert client.get("/api/wards", headers=DOCTOR).status_code == 200
+    assert client.get("/api/callback", headers=DOCTOR).status_code == 403    # admins handle call-backs now
+
+
+def test_everyone_can_view_queue_and_beds_but_only_staff_see_names():
+    dept = client.get("/api/departments").json()[0]
+    queue_token("Kavya Rao Iyer", dept["id"])
+    queue_url = f"/api/departments/{dept['id']}/queue"
+    for headers in [{}, PATIENT]:                      # a visitor, then a logged-in patient
+        names = [t["patient_name"] for t in client.get(queue_url, headers=headers).json()]
+        assert "K. R. I." in names and "Kavya Rao Iyer" not in names
+        assert client.get("/api/wards", headers=headers).status_code == 200
+    names = [t["patient_name"] for t in client.get(queue_url, headers=DOCTOR).json()]
+    assert "Kavya Rao Iyer" in names
+    # A broken or expired token is treated as a visitor, not an error
+    assert client.get("/api/wards", headers={"Authorization": "Bearer nonsense"}).status_code == 200
 
 
 # ---------- the public website keeps working without a login ----------
@@ -131,7 +144,7 @@ def test_public_pages_still_work_without_login():
 
 # ---------- step 6: a full journey with real roles ----------
 
-def test_receptionist_registers_and_doctor_calls_the_patient(monkeypatch):
+def test_patient_in_queue_and_doctor_calls_them(monkeypatch):
     dept = client.post("/api/departments", headers=ADMIN, json={
         "code": "RLS", "name": "Roles Test", "doctors": 1}).json()
 
@@ -142,9 +155,7 @@ def test_receptionist_registers_and_doctor_calls_the_patient(monkeypatch):
         "start_time": "09:00", "end_time": "13:00", "room": 1}).status_code == 201
     monkeypatch.setattr(schedule_module, "now_local",
                         lambda: datetime(2026, 11, 23, 10, 0, tzinfo=ZoneInfo("Asia/Kolkata")))  # a Monday
-    token = client.post("/api/tokens", headers=RECEPTION,
-                        json={"patient_name": "Journey", "department_id": dept["id"]})
-    assert token.status_code == 201
+    queue_token("Journey", dept["id"])
 
     queue = client.get(f"/api/departments/{dept['id']}/queue", headers=DOCTOR).json()
     assert [t["patient_name"] for t in queue] == ["Journey"]

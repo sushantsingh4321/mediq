@@ -6,7 +6,7 @@ Run from the mediq/ folder with:   pytest
 from fastapi.testclient import TestClient
 
 from backend.app.main import app
-from helpers import admin_headers, login_headers
+from helpers import admin_headers, login_headers, queue_token
 
 client = TestClient(app)
 ADMIN = admin_headers()
@@ -32,7 +32,7 @@ def test_overview_is_admin_only():
 def test_overview_counts_go_up():
     before = client.get("/api/admin/overview", headers=ADMIN).json()
 
-    client.post("/api/tokens", headers=ADMIN, json={"patient_name": "Counted", "department_id": 1})
+    queue_token("Counted", 1)
     client.post("/api/enquiries", json={"name": "Counted", "country_code": "+91", "mobile": "9822222222",
                                         "speciality": "Cardiology", "consent": True})
     client.post("/api/callback", json={"name": "Counted", "mobile": "9822222223", "consent": True})
@@ -52,7 +52,7 @@ def test_overview_counts_go_up():
 # ---------- changing roles ----------
 
 def test_admin_changes_a_role_and_it_applies_at_once():
-    user_id, headers = make_account("promote@console.example", "receptionist")
+    user_id, headers = make_account("promote@console.example", "pharmacist")
     assert client.get("/api/admin/overview", headers=headers).status_code == 403
 
     r = client.patch(f"/api/auth/users/{user_id}", headers=ADMIN, json={"role": "admin"})
@@ -62,7 +62,7 @@ def test_admin_changes_a_role_and_it_applies_at_once():
 
 
 def test_only_admin_changes_roles():
-    user_id, headers = make_account("self-promote@console.example", "receptionist")
+    user_id, headers = make_account("self-promote@console.example", "pharmacist")
     r = client.patch(f"/api/auth/users/{user_id}", headers=headers, json={"role": "admin"})
     assert r.status_code == 403
 
@@ -79,11 +79,11 @@ def test_doctor_with_sessions_must_have_them_removed_first():
         "doctor_id": doctor_id, "department_id": 1, "weekday": 6,
         "start_time": "07:00", "end_time": "08:00", "room": 1}).json()
 
-    r = client.patch(f"/api/auth/users/{doctor_id}", headers=ADMIN, json={"role": "receptionist"})
+    r = client.patch(f"/api/auth/users/{doctor_id}", headers=ADMIN, json={"role": "pharmacist"})
     assert r.status_code == 409 and "OPD session" in r.json()["detail"]
 
     client.delete(f"/api/schedule/{slot['id']}", headers=ADMIN)
-    r = client.patch(f"/api/auth/users/{doctor_id}", headers=ADMIN, json={"role": "receptionist"})
+    r = client.patch(f"/api/auth/users/{doctor_id}", headers=ADMIN, json={"role": "pharmacist"})
     assert r.status_code == 200
 
 

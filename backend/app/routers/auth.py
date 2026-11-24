@@ -6,7 +6,7 @@ URLs:
     POST /api/auth/login    email + password  ->  login token
     GET  /api/auth/me       the logged-in user   (needs a token)
     POST /api/auth/logout   cancel this token    (needs a token)
-    POST /api/auth/users    ADMIN ONLY: create a doctor / receptionist / admin account
+    POST /api/auth/users    ADMIN ONLY: create a doctor / pharmacist / admin account
     GET  /api/auth/users    ADMIN ONLY: list all accounts
     PATCH /api/auth/users/{id}  ADMIN ONLY: change someone's role
 
@@ -191,7 +191,7 @@ class StaffCreate(BaseModel):
 
 @router.post("/users", response_model=UserOut, status_code=201, dependencies=[Depends(admin_only)])
 def create_staff_account(data: StaffCreate, db: Session = Depends(get_db)):
-    """ADMIN ONLY: create a doctor, receptionist, admin (or patient) account."""
+    """ADMIN ONLY: create a doctor, pharmacist, admin (or patient) account."""
     return create_user(db, full_name=data.full_name, email=data.email, password=data.password,
                        phone=data.phone, role=data.role)
 
@@ -233,7 +233,7 @@ class RoleChange(BaseModel):
 def change_role(user_id: int, data: RoleChange, db: Session = Depends(get_db),
                 admin: User = Depends(admin_only)):
     """
-    ADMIN ONLY: change someone's role (e.g. make a receptionist a doctor).
+    ADMIN ONLY: change someone's role (e.g. make a pharmacist an admin).
     It applies on their very next request, because roles are read from the
     database every time (see deps.py).
     """

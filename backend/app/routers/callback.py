@@ -30,7 +30,7 @@ from sqlalchemy.orm import Session
 from ..config import get_settings
 from ..database import SessionLocal, get_db
 from ..db_models import CallbackRow
-from ..deps import reception_only
+from ..deps import admin_only
 from ..models import CallbackStatus   # pending / calling / done / failed (moved to models.py)
 from ..services.telephony import TelephonyError, get_provider
 
@@ -193,7 +193,7 @@ def request_callback(data: CallbackCreate, db: Session = Depends(get_db)):
     return CallbackReceipt(id=cb.id, mobile=cb.mobile, status=cb.status, message=message)
 
 
-@router.get("", response_model=list[CallbackRequest], dependencies=[Depends(reception_only)])
+@router.get("", response_model=list[CallbackRequest], dependencies=[Depends(admin_only)])
 def list_callbacks(db: Session = Depends(get_db)):
     """Staff list, newest first. Contains names and numbers: never share it publicly."""
     return db.scalars(select(CallbackRow).order_by(CallbackRow.id.desc())).all()

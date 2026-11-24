@@ -6,7 +6,7 @@ A test is just a function that checks the code does what we expect.
 from fastapi.testclient import TestClient
 
 from backend.app.main import app
-from helpers import admin_headers
+from helpers import admin_headers, queue_token
 from backend.app.queueing import estimate_wait_for_position, mmc_metrics
 
 # Logged in as admin: these endpoints need a login since step 4 (accounts)
@@ -45,8 +45,8 @@ def test_full_patient_journey():
         "code": "ENT", "name": "ENT", "doctors": 1,
         "avg_consult_minutes": 10, "expected_patients_per_hour": 3}).json()
 
-    a = client.post("/api/tokens", json={"patient_name": "A", "department_id": dept["id"]}).json()
-    b = client.post("/api/tokens", json={"patient_name": "B", "department_id": dept["id"]}).json()
+    a = queue_token("A", dept["id"])
+    b = queue_token("B", dept["id"])
     assert a["number"] == "ENT-001" and b["number"] == "ENT-002"
     assert b["people_ahead"] == 1 and b["estimated_wait_minutes"] == 10.0
 
@@ -63,7 +63,8 @@ def test_full_patient_journey():
 
 
 def test_validation_errors():
-    assert client.post("/api/tokens", json={"patient_name": "X", "department_id": 999}).status_code == 404
+    # The reception desk is gone: nobody can hand out tokens with POST /api/tokens any more
+    assert client.post("/api/tokens", json={"patient_name": "X", "department_id": 1}).status_code in (404, 405)
     assert client.post("/api/departments", json={"code": "Z", "name": "Z", "doctors": 0}).status_code == 422
 
 
