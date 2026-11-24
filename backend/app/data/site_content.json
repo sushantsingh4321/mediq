@@ -1,0 +1,49 @@
+{
+  "brand": "mediQ Health",
+  "tagline": "Care that doesn't keep you waiting",
+  "email": "care@mediq.example",
+  "head_office": "mediQ Health, 3rd Floor, Example Towers, Sector 5, Pune 411000",
+
+  "helplines": [
+    { "label": "24/7 Helpline", "number": "+91 90000 11111" },
+    { "label": "Ambulance 24/7", "number": "+91 90000 22222" }
+  ],
+
+  "emergency_numbers": [
+    { "city": "Pune",    "number": "+91 90000 30001" },
+    { "city": "Jaipur",  "number": "+91 90000 30002" },
+    { "city": "Lucknow", "number": "+91 90000 30003" },
+    { "city": "Kochi",   "number": "+91 90000 30004" },
+    { "city": "Bhopal",  "number": "+91 90000 30005" }
+  ],
+
+  "hospitals": [
+    { "name": "mediQ City Hospital",        "area": "Sector 12",          "city": "Pune",    "state": "Maharashtra" },
+    { "name": "mediQ Lakeside Hospital",    "area": "14 Lake View Road",  "city": "Nagpur",  "state": "Maharashtra" },
+    { "name": "mediQ Heritage Hospital",    "area": "Plot 7, Ring Road",  "city": "Jaipur",  "state": "Rajasthan" },
+    { "name": "mediQ Desert Care Clinic",   "area": "22 Station Road",    "city": "Jodhpur", "state": "Rajasthan" },
+    { "name": "mediQ Riverfront Hospital",  "area": "Sector 21",          "city": "Lucknow", "state": "Uttar Pradesh" },
+    { "name": "mediQ Coastal Hospital",     "area": "5 Harbour Road",     "city": "Kochi",   "state": "Kerala" },
+    { "name": "mediQ Central Hospital",     "area": "Sector 9",           "city": "Bhopal",  "state": "Madhya Pradesh" }
+  ],
+
+  "specialities": [
+    { "name": "Cardiology",       "conditions": ["Chest pain", "High blood pressure", "Heart rhythm problems", "Heart failure"] },
+    { "name": "Neurology",        "conditions": ["Migraine", "Stroke", "Epilepsy", "Parkinson's disease"] },
+    { "name": "Orthopaedics",     "conditions": ["Knee pain", "Back pain", "Fractures", "Joint replacement"] },
+    { "name": "Oncology",         "conditions": ["Breast cancer", "Lung cancer", "Blood cancers", "Chemotherapy care"] },
+    { "name": "Paediatrics",      "conditions": ["Fever in children", "Vaccinations", "Asthma", "Growth checkups"] },
+    { "name": "General Medicine", "conditions": ["Diabetes", "Fever and infections", "Thyroid problems", "Health checkups"] }
+  ],
+
+  "country_codes": [
+    { "code": "+91",  "country": "India" },
+    { "code": "+971", "country": "UAE" },
+    { "code": "+44",  "country": "UK" },
+    { "code": "+1",   "country": "USA / Canada" },
+    { "code": "+977", "country": "Nepal" },
+    { "code": "+880", "country": "Bangladesh" },
+    { "code": "+94",  "country": "Sri Lanka" }
+  ],
+  "default_country_code": "+91"
+}
