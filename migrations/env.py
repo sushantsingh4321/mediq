@@ -36,12 +36,29 @@ def run_migrations_offline() -> None:
 def run_migrations_online() -> None:
     """Normal mode: connect and change the database."""
     with engine.connect() as connection:
+        sqlite = connection.dialect.name == "sqlite"
+        if sqlite:
+            # SQLite rebuilds a table by copying it and DROPPING the old one. With
+            # foreign keys switched on, dropping `users` would count as deleting
+            # every user, and ON DELETE CASCADE would wipe their OPD sessions.
+            # So: keys off while migrating (must be set before the transaction),
+            # then check every link is still valid.
+            connection.exec_driver_sql("PRAGMA foreign_keys=OFF")
+            connection.commit()   # SQLAlchemy opened a transaction for the PRAGMA: close it first
         # render_as_batch=True: SQLite can't change an existing column directly,
         # so Alembic rebuilds the table for it. Harmless on PostgreSQL.
         context.configure(connection=connection, target_metadata=target_metadata,
                           render_as_batch=True)
         with context.begin_transaction():
             context.run_migrations()
+            if sqlite:
+                broken = connection.exec_driver_sql("PRAGMA foreign_key_check").fetchall()
+                if broken:   # raising here undoes this migration run
+                    raise RuntimeError(f"Migration left rows pointing at missing rows: {broken[:5]}")
+        if sqlite:
+            # This connection goes back to the app's pool: switch the safety check back on.
+            connection.exec_driver_sql("PRAGMA foreign_keys=ON")
+            connection.commit()
 
 
 if context.is_offline_mode():
