@@ -64,3 +64,12 @@ def test_never_prints_the_database_password(tmp_path):
     r = run_script(tmp_path, ["DATABASE_URL=postgresql://user:SuperSecret99@ep-x.neon.tech/neondb?sslmode=require",
                               "ADMIN_EMAIL=a@b.example", "ADMIN_PASSWORD=prod-only-password-123"])
     assert "ep-x.neon.tech" in r.stdout and "SuperSecret99" not in r.stdout + r.stderr
+
+
+def test_placeholder_text_gets_a_plain_message(tmp_path):
+    r = run_script(tmp_path, ["DATABASE_URL=PASTE-THE-ADDRESS-FROM-5a-HERE", "ADMIN_EMAIL=a@b.example",
+                              "ADMIN_PASSWORD=prod-only-password-123"], "--yes")
+    assert r.returncode == 1 and "isn't a database address" in r.stdout and "Traceback" not in r.stderr
+    r = run_script(tmp_path, ["DATABASE_URL=postgresql://u:p@ep-x.neon.tech/db?sslmode=require",
+                              "ADMIN_EMAIL=YOUR-EMAIL", "ADMIN_PASSWORD=prod-only-password-123"], "--yes")
+    assert r.returncode == 1 and "isn't an email address" in r.stdout

@@ -69,6 +69,13 @@ def main(argv=None) -> int:
         fail("DATABASE_URL is empty. Copy it from Neon (Connection string) into .env.production.")
     if url.startswith("sqlite") and not args.allow_sqlite:
         fail("DATABASE_URL points at a SQLite file. This script is for the production (Neon) database.")
+    if not url.startswith("sqlite") and not (url.startswith(("postgresql://", "postgres://", "postgresql+"))
+                                             and "@" in url):
+        fail("DATABASE_URL in .env.production isn't a database address. It must be ONLY the address, "
+             "starting with postgresql:// and containing @ (copy DATABASE_URL_UNPOOLED from Vercel > "
+             "Storage > your database, the part after the =). No quotes, no spaces, no 'psql'.")
+    if "@" not in os.getenv("ADMIN_EMAIL", "@"):
+        fail("ADMIN_EMAIL in .env.production isn't an email address (it has no @).")
     # Checked BEFORE the app reads the local .env, so your LOCAL admin password is never used by accident
     if not (os.getenv("ADMIN_EMAIL") and os.getenv("ADMIN_PASSWORD")):
         fail("ADMIN_EMAIL and ADMIN_PASSWORD must be in .env.production (the production admin's login).")
