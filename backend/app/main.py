@@ -40,10 +40,19 @@ from .services import pharmacy_seed
 from .services.pharmacy import PharmacyError
 from .store import store
 
-# Create or update the database tables before anything uses them.
-# Same as running `alembic upgrade head` by hand; safe to run on every start.
-run_migrations()
-auth.seed_first_admin()   # first admin account from .env (only if none exists yet)
+# ---------------------------------------------------------------- start-up work
+# Locally (uvicorn), every start brings the tables up to date and adds the first
+# admin and some demo data: handy while learning.
+# On Vercel, NONE of that happens at start-up: copies of the app start often,
+# sometimes several at once, and two copies migrating together could clash. It
+# is done ONCE, from your laptop, with scripts/setup_production.py (DEPLOY.md).
+# Vercel sets VERCEL=1 for us. MEDIQ_STARTUP_TASKS=1 / 0 overrides it either way.
+RUN_STARTUP_TASKS = os.getenv("MEDIQ_STARTUP_TASKS", "0" if os.getenv("VERCEL") else "1") == "1"
+
+if RUN_STARTUP_TASKS:
+    # Same as running `alembic upgrade head` by hand; safe to run on every start.
+    run_migrations()
+    auth.seed_first_admin()   # first admin account from .env (only if none exists yet)
 
 # Which hospital is this? Set these when you deploy one copy per hospital.
 HOSPITAL_ID = os.getenv("MEDIQ_HOSPITAL_ID", "HOSP-001")
@@ -275,24 +284,30 @@ def seed_demo_data():
                                           avg_consult_minutes=15, expected_patients_per_hour=3))
 
 
-if os.getenv("MEDIQ_SEED", "1") == "1":
+def seed_all_demo_data():
+    """Departments, wards, ambulances and 30 medicines. Each part only if it's still empty."""
     seed_demo_data()
     beds.seed_demo_wards()
     ambulance.seed_demo_ambulances()
     pharmacy_seed.seed_demo_pharmacy()   # 30 medicines + batches, only if the catalogue is empty
 
 
+if RUN_STARTUP_TASKS and os.getenv("MEDIQ_SEED", "1") == "1":
+    seed_all_demo_data()
+
+
 # ---------------------------------------------------------------- frontend
-# Serve the plain HTML/JS frontend from the same server. Mounted LAST so the
-# /api routes above take priority.
+# Locally (uvicorn), this server also serves the plain HTML/JS frontend.
+# Mounted LAST so the /api routes above take priority.
+# On Vercel, Vercel serves frontend/ itself (vercel.json) and the Python
+# function may not contain those files, so we only serve them if they're here.
 FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
 
+if (FRONTEND_DIR / "home.html").exists():
+    # The website's home page. Without this route, "/" would show index.html,
+    # which is now the OPD system (still reachable at /index.html).
+    @app.get("/", include_in_schema=False)
+    def home_page():
+        return FileResponse(FRONTEND_DIR / "home.html")
 
-# The website's home page. Without this route, "/" would show index.html,
-# which is now the OPD system (still reachable at /index.html).
-@app.get("/", include_in_schema=False)
-def home_page():
-    return FileResponse(FRONTEND_DIR / "home.html")
-
-
-app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

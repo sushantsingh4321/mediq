@@ -1,0 +1,29 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "pip install -r requirements.txt",
+  "buildCommand": "",
+  "outputDirectory": "frontend",
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "{backend,migrations}/**"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index"
+    },
+    {
+      "src": "/(docs|redoc|openapi\\.json)",
+      "dest": "/api/index"
+    },
+    {
+      "src": "/",
+      "dest": "/home.html"
+    },
+    {
+      "handle": "filesystem"
+    }
+  ]
+}
