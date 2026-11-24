@@ -49,6 +49,10 @@ htmlcov/
 *.log
 nohup.out
 
+# ---------------------------------------------------------------- deployment
+# Made by "vercel dev" / "vercel link": links THIS computer to your Vercel project
+.vercel/
+
 # ---------------------------------------------------------------- operating system
 # macOS folder settings (that hidden .DS_Store file)
 .DS_Store
