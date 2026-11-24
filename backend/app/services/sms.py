@@ -19,7 +19,10 @@ from datetime import datetime
 # uvicorn prints this logger's INFO lines (same as services/telephony.py), so you see them in the terminal
 log = logging.getLogger("uvicorn.error")
 
-OUTBOX: deque["Sms"] = deque(maxlen=200)    # the last 200 messages "sent" (in memory only)
+# The last 200 messages "sent", in memory only: for tests and a quick look while
+# developing. On Vercel each copy of the app has its own (and loses it), which is
+# fine: the log line is the record, and the real messages live in the database.
+OUTBOX: deque["Sms"] = deque(maxlen=200)
 
 
 @dataclass

@@ -38,8 +38,25 @@ class Settings:
 
 
 # Default database: a single file, mediq/mediq.db (SQLite, nothing to install).
-# For PostgreSQL later, set e.g. DATABASE_URL=postgresql+psycopg://user:pass@host/mediq
+# In production (Neon), DATABASE_URL looks like
+#   postgresql://user:password@ep-xxx.aws.neon.tech/neondb?sslmode=require
 DEFAULT_DATABASE_URL = f"sqlite:///{PROJECT_DIR / 'mediq.db'}"
+
+
+def normalize_database_url(url: str) -> str:
+    """
+    Make any PostgreSQL address use the driver we install (psycopg2-binary):
+        postgres://...            (older Heroku / some Vercel variables)  -> postgresql+psycopg2://...
+        postgresql://...          (what Neon shows you)                    -> postgresql+psycopg2://...
+    SQLAlchemy 2.1 reads plain "postgresql://" as the newer psycopg 3 driver,
+    which we don't install, so without this every request would fail.
+    SQLite addresses and addresses that already name a driver are left alone.
+    The ?sslmode=require part stays as it is: Neon needs it (encrypted connection).
+    """
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg2://" + url[len(prefix):]
+    return url
 
 
 def get_settings() -> Settings:
@@ -53,7 +70,7 @@ def get_settings() -> Settings:
         desk_number=os.getenv("DESK_NUMBER", ""),
         public_base_url=os.getenv("PUBLIC_BASE_URL", "http://localhost:8000").rstrip("/"),
         # "or": an empty DATABASE_URL= line in .env also means "use the default file"
-        database_url=os.getenv("DATABASE_URL") or DEFAULT_DATABASE_URL,
+        database_url=normalize_database_url(os.getenv("DATABASE_URL", "").strip() or DEFAULT_DATABASE_URL),
         secret_key=os.getenv("SECRET_KEY", ""),
         access_token_minutes=int(os.getenv("ACCESS_TOKEN_MINUTES") or 60),
         admin_email=os.getenv("ADMIN_EMAIL", ""),

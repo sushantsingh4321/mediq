@@ -18,6 +18,7 @@ Security helpers: password hashing and login tokens.
 """
 
 import logging
+import os
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -80,6 +81,12 @@ def get_secret_key() -> str:
         if len(key) < 32:
             log.warning("SECRET_KEY is shorter than 32 characters; please make a longer one.")
         return key
+    if os.getenv("VERCEL"):
+        # Serverless: many short-lived copies of the app run at once. Each would
+        # invent its OWN random key, so a login made on one copy would fail on
+        # the next click if it reaches another. Stop with a clear message instead.
+        raise RuntimeError("SECRET_KEY is not set. Add it in Vercel: Project > Settings > "
+                           "Environment Variables (see DEPLOY.md), then redeploy.")
     if _fallback_key is None:
         _fallback_key = secrets.token_urlsafe(48)
         log.warning("SECRET_KEY is not set in .env: using a temporary random key. "

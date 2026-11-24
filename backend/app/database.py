@@ -15,20 +15,29 @@ from pathlib import Path
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.pool import NullPool
 
 from .config import PROJECT_DIR, get_settings
 
 DATABASE_URL = get_settings().database_url
 
-# SQLite only lets the thread that opened a connection use it. FastAPI uses
-# several threads, so we switch that check off (safe: each request gets its
-# own session, see get_db below). Other databases don't need this.
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+IS_SQLITE = DATABASE_URL.startswith("sqlite")
 
-# The engine knows HOW to reach the database. Create it once for the whole app.
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+if IS_SQLITE:
+    # Locally: SQLite only lets the thread that opened a connection use it.
+    # FastAPI uses several threads, so we switch that check off (safe: each
+    # request gets its own session, see get_db below).
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    # Production: PostgreSQL on Neon, reached from Vercel's serverless functions.
+    # A normal server keeps a "pool" of open connections to reuse. A serverless
+    # function is a short-lived copy of the app, and Vercel may run many at
+    # once, so pooled connections would pile up on Neon. NullPool = open a
+    # connection for each piece of work and close it straight after.
+    # (sslmode=require in DATABASE_URL keeps the connection encrypted.)
+    engine = create_engine(DATABASE_URL, poolclass=NullPool)
 
-if DATABASE_URL.startswith("sqlite"):
+if IS_SQLITE:
     # SQLite ignores FOREIGN KEY rules unless you switch them on for every
     # connection. (PostgreSQL always enforces them.) With this on, deleting a
     # doctor's account also deletes their OPD sessions (ondelete="CASCADE").

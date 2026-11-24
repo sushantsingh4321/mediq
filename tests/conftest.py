@@ -17,6 +17,12 @@ os.environ["DRY_RUN"] = "true"
 _test_dir = Path(tempfile.mkdtemp(prefix="mediq-tests-"))
 os.environ["DATABASE_URL"] = f"sqlite:///{_test_dir / 'test.db'}"
 
+# To run every test against PostgreSQL instead (as on Neon), point
+# TEST_DATABASE_URL at an EMPTY PostgreSQL database you don't need:
+#   TEST_DATABASE_URL=postgresql://user:pass@localhost/mediq_test pytest
+if os.getenv("TEST_DATABASE_URL"):
+    os.environ["DATABASE_URL"] = os.environ["TEST_DATABASE_URL"]
+
 # A fixed key just for tests (never use this anywhere real).
 os.environ["SECRET_KEY"] = "test-only-secret-key-0123456789-abcdefghijklmnop"
 

@@ -69,7 +69,9 @@ class UserOut(BaseModel):
     def mark_as_utc(cls, value: datetime) -> datetime:
         # We save times in UTC, but SQLite forgets the time zone. Without this
         # the browser would read 15:55 UTC as 15:55 India time (5.5 hours off).
-        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+        # PostgreSQL keeps the zone but answers in ITS time zone (e.g. +05:30),
+        # so convert to UTC either way: same moment, always written the same.
+        return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
 
 
 class TokenResponse(BaseModel):

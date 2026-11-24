@@ -4,6 +4,8 @@ They use the separate test database set up in conftest.py, never mediq.db.
 Run from the mediq/ folder with:   pytest
 """
 
+import os
+
 import pytest
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
@@ -24,8 +26,9 @@ def make_user(db, email, **extra):
 
 
 def test_tests_use_their_own_database():
-    assert "mediq-tests-" in DATABASE_URL       # the temp file from conftest.py
-    assert not DATABASE_URL.endswith("/mediq.db")
+    assert not DATABASE_URL.endswith("/mediq.db")   # never the real local database
+    if not os.getenv("TEST_DATABASE_URL"):
+        assert "mediq-tests-" in DATABASE_URL       # the temp file from conftest.py
 
 
 def test_users_table_has_the_right_columns():
