@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stock – mediQ Pharmacy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="core.js"></script>
+</head>
+<body>
+  <!-- Module 4: receive deliveries, stock value report, stock diary. Pharmacists only.
+       Backend: routers/pharmacy.py (/api/pharmacy/stock/...) -->
+  <header id="app-bar"></header>
+  <nav id="ph-nav" class="ph-nav"></nav>
+
+  <main class="ui-page ui-appear ph-stack">
+    <div>
+      <h1>Stock</h1>
+      <p class="ui-lead">Receive deliveries, see what the shelf is worth, and every change to it.</p>
+    </div>
+
+    <section class="ui-card" aria-labelledby="h-receive">
+      <h2 id="h-receive">Receive stock</h2>
+      <p class="ui-hint">One delivery of one medicine with one batch number. Quantities and prices are per unit
+        (one tablet, one bottle…), as printed on the strip or invoice.</p>
+      <div id="receive-msg" hidden></div>
+      <form class="ph-form" id="receive-form" novalidate>
+        <div class="ui-row">
+          <div class="ui-field" style="flex-basis: 320px">
+            <label for="r-medicine">Medicine</label>
+            <input class="ui-input" id="r-medicine" type="search" placeholder="Type a brand or generic name"
+                   aria-describedby="r-medicine-hint">
+            <span class="ui-hint" id="r-medicine-hint">Pick from the suggestions.</span>
+          </div>
+          <div class="ui-field">
+            <label for="r-supplier">Supplier</label>
+            <select class="ui-input" id="r-supplier" name="supplier_id"><option value="">Not recorded</option></select>
+          </div>
+        </div>
+        <div class="ui-row">
+          <div class="ui-field"><label for="r-batch">Batch number</label>
+            <input class="ui-input" id="r-batch" name="batch_no" required maxlength="30" autocomplete="off"
+                   style="text-transform: uppercase" placeholder="DL24117"></div>
+          <div class="ui-field"><label for="r-mfg">Manufactured</label>
+            <input class="ui-input" id="r-mfg" name="mfg_date" type="date" required></div>
+          <div class="ui-field"><label for="r-exp">Expires</label>
+            <input class="ui-input" id="r-exp" name="expiry_date" type="date" required></div>
+          <div class="ui-field"><label for="r-qty">Quantity <span id="r-unit">(units)</span></label>
+            <input class="ui-input" id="r-qty" name="quantity" type="number" min="1" required inputmode="numeric"></div>
+        </div>
+        <div class="ui-row">
+          <div class="ui-field"><label for="r-cost">Purchase price, ₹ per unit</label>
+            <input class="ui-input" id="r-cost" name="purchase_price" type="number" min="0.01" step="0.01" required></div>
+          <div class="ui-field"><label for="r-mrp">MRP, ₹ per unit</label>
+            <input class="ui-input" id="r-mrp" name="mrp" type="number" min="0.01" step="0.01" required></div>
+          <div class="ui-field"><label for="r-sell">Selling price before GST, ₹ per unit</label>
+            <input class="ui-input" id="r-sell" name="selling_price" type="number" min="0.01" step="0.01" required
+                   aria-describedby="r-sell-hint">
+            <span class="ui-hint" id="r-sell-hint" aria-live="polite">With GST it must not be above the MRP.</span></div>
+          <div class="ui-field"><label for="r-rack">Rack <span class="ui-hint">(optional)</span></label>
+            <input class="ui-input" id="r-rack" name="rack_location" maxlength="20" placeholder="A3-2"></div>
+        </div>
+        <button class="ui-button ui-button--action" type="submit">Receive stock</button>
+      </form>
+    </section>
+
+    <section aria-labelledby="h-report">
+      <h2 id="h-report">Stock report</h2>
+      <div class="ph-tiles" id="report-tiles"></div>
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <caption class="ui-sr-only">Stock per medicine</caption>
+          <thead><tr><th scope="col">Medicine</th><th scope="col" class="num">In date</th>
+            <th scope="col" class="num">Expired</th><th scope="col">Nearest expiry</th>
+            <th scope="col" class="num">Value at cost</th><th scope="col" class="num">Value at selling price</th></tr></thead>
+          <tbody id="report-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-moves">
+      <h2 id="h-moves">Recent stock changes</h2>
+      <p class="ui-hint">Every change to any batch is written here, with who did it and why.</p>
+      <div class="ui-table-wrap">
+        <table class="ui-table">
+          <caption class="ui-sr-only">Stock diary</caption>
+          <thead><tr><th scope="col">When</th><th scope="col">Medicine</th><th scope="col">Batch</th>
+            <th scope="col">Type</th><th scope="col" class="num">Change</th><th scope="col">Reason</th>
+            <th scope="col">By</th></tr></thead>
+          <tbody id="moves"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="pharmacy.js"></script>
+  <script src="pharmacy-stock.js"></script>
+</body>
+</html>

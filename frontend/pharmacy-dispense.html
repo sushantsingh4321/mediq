@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dispense – mediQ Pharmacy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="core.js"></script>
+  <style>
+    /* The printed bill: A5 paper, small margins */
+    @media print { @page { size: A5; margin: 10mm; } }
+  </style>
+</head>
+<body>
+  <!-- Module 4: the pharmacy counter. Pick a prescription (or a walk-in OTC sale),
+       check the batches FEFO will use, dispense, print the bill. Pharmacists only.
+       Backend: routers/pharmacy.py (/api/pharmacy/prescriptions, /api/pharmacy/dispense) -->
+  <header id="app-bar"></header>
+  <nav id="ph-nav" class="ph-nav"></nav>
+
+  <main class="ui-page ui-appear">
+    <h1>Dispense</h1>
+    <p class="ui-lead">Batches are chosen for you: the one that expires first goes out first, and expired
+      stock is never used.</p>
+
+    <div class="ph-split" id="counter">
+      <!-- Left: prescriptions waiting at the counter -->
+      <section class="ui-card" aria-labelledby="h-rx">
+        <h2 id="h-rx">Prescriptions</h2>
+        <form class="ph-form" id="rx-search" role="search">
+          <div class="ui-field">
+            <label for="rx-q">Patient name</label>
+            <input class="ui-input" id="rx-q" type="search" autocomplete="off">
+          </div>
+          <label class="ph-check"><input type="checkbox" id="rx-open" checked> Only ones still to hand out</label>
+        </form>
+        <ul class="ph-list" id="rx-list" aria-live="polite"></ul>
+        <div class="ph-actions">
+          <button class="ui-button ui-button--secondary" type="button" id="otc-btn">Walk-in sale (OTC, no prescription)</button>
+        </div>
+      </section>
+
+      <!-- Right: the work area -->
+      <section class="ui-card" id="work" aria-live="polite">
+        <div class="ui-empty">Choose a prescription on the left, or start a walk-in sale.</div>
+      </section>
+    </div>
+
+    <!-- The bill (printed on its own) -->
+    <section class="ui-card" id="bill-area" hidden aria-labelledby="h-bill"></section>
+  </main>
+
+  <script src="pharmacy.js"></script>
+  <script src="pharmacy-dispense.js"></script>
+</body>
+</html>

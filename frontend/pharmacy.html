@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Medicine catalogue – mediQ Pharmacy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <!-- core.js: theme (before the page is drawn) + shared helpers -->
+  <script src="core.js"></script>
+</head>
+<body>
+  <!-- Module 4: Pharmacy. Anyone can search; pharmacists add and edit medicines.
+       Backend: routers/pharmacy.py. Shared page code: pharmacy.js -->
+  <header id="app-bar"></header>
+  <nav id="ph-nav" class="ph-nav"></nav>
+
+  <main class="ui-page ui-appear">
+    <h1>Medicine catalogue</h1>
+    <p class="ui-lead">Search by brand or generic name, for example "Dolo" or "Paracetamol".</p>
+
+    <form class="ph-form ph-toolbar" id="search-form" role="search">
+      <div class="ui-field">
+        <label for="q">Search medicines</label>
+        <input class="ui-input" id="q" type="search" placeholder="Brand or generic name" autocomplete="off">
+      </div>
+      <div class="ui-field ui-field--narrow">
+        <label for="category">Category</label>
+        <select class="ui-input" id="category"><option value="">All categories</option></select>
+      </div>
+      <label class="ph-check"><input type="checkbox" id="in-stock"> In stock only</label>
+      <button class="ui-button ui-button--secondary" type="button" id="add-btn" hidden>Add medicine</button>
+    </form>
+
+    <!-- Add / edit a medicine (pharmacists) -->
+    <section class="ui-card ph-stack" id="med-panel" hidden aria-labelledby="med-panel-title">
+      <h2 id="med-panel-title">Add a medicine</h2>
+      <div id="med-msg" hidden></div>
+      <form class="ph-form" id="med-form" novalidate>
+        <div class="ui-row">
+          <div class="ui-field"><label for="f-brand">Brand name</label>
+            <input class="ui-input" id="f-brand" name="brand_name" required maxlength="100" placeholder="Dolo 650"></div>
+          <div class="ui-field"><label for="f-generic">Generic name (salt)</label>
+            <input class="ui-input" id="f-generic" name="generic_name" required maxlength="200" placeholder="Paracetamol"></div>
+          <div class="ui-field"><label for="f-strength">Strength</label>
+            <input class="ui-input" id="f-strength" name="strength" required maxlength="50" placeholder="650 mg"></div>
+        </div>
+        <div class="ui-row">
+          <div class="ui-field"><label for="f-form">Form</label>
+            <select class="ui-input" id="f-form" name="dosage_form">
+              <option value="tablet">Tablet</option><option value="capsule">Capsule</option>
+              <option value="syrup">Syrup</option><option value="injection">Injection</option>
+              <option value="ointment">Ointment</option><option value="drops">Drops</option>
+              <option value="inhaler">Inhaler</option>
+            </select></div>
+          <div class="ui-field"><label for="f-category">Category</label>
+            <input class="ui-input" id="f-category" name="category" required maxlength="50" list="category-options" placeholder="analgesic">
+            <datalist id="category-options"></datalist></div>
+          <div class="ui-field"><label for="f-schedule">Schedule</label>
+            <select class="ui-input" id="f-schedule" name="schedule" aria-describedby="f-schedule-hint">
+              <option value="OTC">OTC: over the counter</option>
+              <option value="H">H: prescription needed</option>
+              <option value="H1">H1: prescription + register</option>
+              <option value="X">X: strictest control</option>
+            </select>
+            <span class="ui-hint" id="f-schedule-hint">H, H1 and X always need a prescription.</span></div>
+        </div>
+        <div class="ui-row">
+          <div class="ui-field"><label for="f-maker">Manufacturer</label>
+            <input class="ui-input" id="f-maker" name="manufacturer" required maxlength="100"></div>
+          <div class="ui-field"><label for="f-hsn">HSN code</label>
+            <input class="ui-input" id="f-hsn" name="hsn_code" value="3004" inputmode="numeric" pattern="\d{4,8}"></div>
+          <div class="ui-field"><label for="f-gst">GST</label>
+            <select class="ui-input" id="f-gst" name="gst_percent">
+              <option value="0">0%</option><option value="5">5%</option><option value="12" selected>12%</option>
+              <option value="18">18%</option><option value="28">28%</option>
+            </select></div>
+        </div>
+        <div class="ui-row">
+          <div class="ui-field"><label for="f-pack">Pack size</label>
+            <input class="ui-input" id="f-pack" name="pack_size" type="number" min="1" value="10"></div>
+          <div class="ui-field"><label for="f-unit">Unit</label>
+            <input class="ui-input" id="f-unit" name="unit" value="tablet" maxlength="20" aria-describedby="f-unit-hint">
+            <span class="ui-hint" id="f-unit-hint">What stock is counted in: tablet, capsule, bottle, vial…</span></div>
+          <div class="ui-field"><label for="f-reorder">Reorder level</label>
+            <input class="ui-input" id="f-reorder" name="reorder_level" type="number" min="0" value="50" aria-describedby="f-reorder-hint">
+            <span class="ui-hint" id="f-reorder-hint">Warn when stock falls to this many units.</span></div>
+          <div class="ui-field"><label for="f-storage">Storage</label>
+            <select class="ui-input" id="f-storage" name="storage">
+              <option value="room">Room temperature</option><option value="cold_chain_2_8C">Fridge, 2–8 °C</option>
+            </select></div>
+        </div>
+        <label class="ph-check"><input type="checkbox" name="prescription_required" id="f-rx"> Prescription required (even if OTC)</label>
+        <div class="ph-actions">
+          <button class="ui-button ui-button--action" type="submit" id="med-save">Add medicine</button>
+          <button class="ui-button ui-button--secondary" type="button" id="med-cancel">Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <div id="list-msg" hidden></div>
+    <div class="ui-table-wrap" id="results-wrap">
+      <table class="ui-table">
+        <caption class="ui-sr-only">Medicines</caption>
+        <thead><tr>
+          <th scope="col">Medicine</th><th scope="col">Category</th><th scope="col">Schedule</th>
+          <th scope="col" class="num">Stock</th><th scope="col" class="num">Price</th>
+        </tr></thead>
+        <tbody id="results"></tbody>
+      </table>
+    </div>
+    <p class="ui-hint" id="count" aria-live="polite"></p>
+
+    <!-- One medicine's batches (pharmacists and doctors) -->
+    <section class="ui-card" id="detail" hidden aria-live="polite"></section>
+  </main>
+
+  <script src="pharmacy.js"></script>
+  <script src="pharmacy-catalogue.js"></script>
+</body>
+</html>

@@ -4,7 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin console – mediQ Health</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="style.css">
+  <!-- core.js: theme (before the page is drawn) + shared helpers -->
+  <script src="core.js"></script>
 </head>
 <!-- data-require-roles="admin": site.js sends anyone else to login or shows "No access".
      The server checks again on every request (deps.py: admin_only). -->
@@ -41,7 +46,7 @@
         <label>Role
           <select name="role">
             <option value="doctor">Doctor</option>
-            <option value="receptionist">Receptionist</option>
+            <option value="pharmacist">Pharmacist</option>
             <option value="admin">Admin</option>
             <option value="patient">Patient</option>
           </select>
@@ -56,7 +61,7 @@
           <option value="">All roles</option>
           <option value="admin">Admins</option>
           <option value="doctor">Doctors</option>
-          <option value="receptionist">Receptionists</option>
+          <option value="pharmacist">Pharmacists</option>
           <option value="patient">Patients</option>
         </select>
       </div>

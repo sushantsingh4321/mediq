@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Suppliers – mediQ Pharmacy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="core.js"></script>
+</head>
+<body>
+  <!-- Module 4: wholesalers we buy from. Pharmacists only.
+       Backend: routers/pharmacy.py (/api/pharmacy/suppliers) -->
+  <header id="app-bar"></header>
+  <nav id="ph-nav" class="ph-nav"></nav>
+
+  <main class="ui-page ui-appear">
+    <h1>Suppliers</h1>
+    <p class="ui-lead">Wholesalers and distributors. A licensed wholesaler has a GSTIN and a drug licence number.</p>
+
+    <div class="ph-split">
+      <section class="ui-card" aria-labelledby="h-form">
+        <h2 id="h-form">Add a supplier</h2>
+        <div id="sup-msg" hidden></div>
+        <form class="ph-form" id="sup-form" novalidate>
+          <div class="ui-field"><label for="s-name">Name</label>
+            <input class="ui-input" id="s-name" name="name" required maxlength="100"></div>
+          <div class="ui-field"><label for="s-gstin">GSTIN <span class="ui-hint">(optional)</span></label>
+            <input class="ui-input" id="s-gstin" name="gstin" maxlength="15" style="text-transform: uppercase"
+                   placeholder="27ABCDE1234F1Z5" aria-describedby="s-gstin-hint" autocomplete="off">
+            <span class="ui-hint" id="s-gstin-hint">15 characters, on the supplier's invoice.</span></div>
+          <div class="ui-field"><label for="s-dl">Drug licence number <span class="ui-hint">(optional)</span></label>
+            <input class="ui-input" id="s-dl" name="drug_license_no" maxlength="50"></div>
+          <div class="ui-field"><label for="s-phone">Phone <span class="ui-hint">(optional)</span></label>
+            <input class="ui-input" id="s-phone" name="phone" type="tel" maxlength="20"></div>
+          <div class="ui-field"><label for="s-email">Email <span class="ui-hint">(optional)</span></label>
+            <input class="ui-input" id="s-email" name="email" type="email" maxlength="255"></div>
+          <div class="ui-field"><label for="s-address">Address <span class="ui-hint">(optional)</span></label>
+            <textarea class="ui-input" id="s-address" name="address" maxlength="300" rows="2"></textarea></div>
+          <div class="ph-actions">
+            <button class="ui-button ui-button--action" type="submit" id="s-save">Add supplier</button>
+            <button class="ui-button ui-button--secondary" type="button" id="s-cancel" hidden>Cancel editing</button>
+          </div>
+        </form>
+      </section>
+
+      <section aria-labelledby="h-list">
+        <h2 id="h-list">All suppliers</h2>
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <caption class="ui-sr-only">Suppliers</caption>
+            <thead><tr><th scope="col">Supplier</th><th scope="col">GSTIN / licence</th><th scope="col">Contact</th>
+              <th scope="col"><span class="ui-sr-only">Actions</span></th></tr></thead>
+            <tbody id="sup-rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="pharmacy.js"></script>
+  <script src="pharmacy-suppliers.js"></script>
+</body>
+</html>

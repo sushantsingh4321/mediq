@@ -5,7 +5,7 @@ const { api, esc, user } = window.mediq;
 
 const fmtTime = iso => new Date(iso).toLocaleString("en-IN",
   { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-const ROLES = ["patient", "receptionist", "doctor", "admin"];
+const ROLES = ["patient", "doctor", "pharmacist", "admin"];
 
 // Lists downloaded from the server; the search boxes filter these in the browser.
 let accounts = [], enquiries = [], callbacks = [];
@@ -37,7 +37,7 @@ async function renderOverview() {
          `${cb.failed} failed · ${cb.calling} calling · ${cb.done} done`, "#callbacks"),
     tile("Enquiries", o.enquiries_total, `${o.enquiries_today} today`, "#enquiries"),
     tile("Accounts", Object.values(acc).reduce((a, b) => a + b, 0),
-         `${plural(acc.doctor, "doctor")} · ${plural(acc.receptionist, "receptionist")} · ` +
+         `${plural(acc.doctor, "doctor")} · ${plural(acc.pharmacist, "pharmacist")} · ` +
          `${plural(acc.admin, "admin")} · ${plural(acc.patient, "patient")}`, "#accounts"),
   ].join("");
   document.getElementById("updated").textContent = `Last updated ${new Date().toLocaleTimeString("en-IN")}.`;

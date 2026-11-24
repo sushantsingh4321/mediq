@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alerts – mediQ Pharmacy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="core.js"></script>
+</head>
+<body>
+  <!-- Module 4: low stock, expiring soon, expired. Pharmacists and doctors can look;
+       only pharmacists can write off expired stock. Backend: GET /api/pharmacy/alerts -->
+  <header id="app-bar"></header>
+  <nav id="ph-nav" class="ph-nav"></nav>
+
+  <main class="ui-page ui-appear">
+    <h1>Alerts</h1>
+    <p class="ui-lead">What needs ordering, and what to use up or take off the shelf. Choose a box to see the list.</p>
+
+    <div class="ph-tiles" id="tiles" role="group" aria-label="Show alerts for"></div>
+    <div id="alert-msg" hidden></div>
+    <section aria-live="polite">
+      <h2 id="list-title"></h2>
+      <div id="list"></div>
+    </section>
+  </main>
+
+  <script src="pharmacy.js"></script>
+  <script src="pharmacy-alerts.js"></script>
+</body>
+</html>
