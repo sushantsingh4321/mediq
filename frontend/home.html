@@ -6,7 +6,7 @@
   <title>mediQ Health – Hospitals, OPD queues and bed availability</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="style.css">
   <!-- core.js: theme (before the page is drawn) + shared helpers -->
   <script src="core.js"></script>
@@ -15,101 +15,102 @@
   <!-- site.js draws the top strip, header and menu in here -->
   <div id="site-header"></div>
 
-  <main class="home">
+  <main class="home" id="main">
 
     <!-- 4a. HERO BANNER -->
-    <section class="hero">
+    <section class="hero" aria-labelledby="hero-title">
+      <!-- The moving text-character horizon behind the hero (gradient-ascii.js, mounted by home.js).
+           Without WebGL the plain dark-blue background of .hero-field shows instead. -->
+      <div class="hero-field" id="hero-ascii" aria-hidden="true"></div>
       <div class="wrap hero-inner">
-        <div>
-          <p class="eyebrow">mediQ Health network</p>
-          <h1>Care that doesn't keep you waiting</h1>
-          <p>Live OPD queues, real-time bed availability and one helpline for every mediQ hospital.</p>
+        <div class="hero-copy">
+          <h1 id="hero-title">Care that doesn't keep you waiting</h1>
+          <p class="hero-lead">Live OPD queues, real-time bed availability and one helpline for every mediQ hospital.</p>
           <div class="hero-cta">
-            <a class="btn btn-book" href="/book.html">Book Appointment</a>
+            <a class="btn btn-book" href="/book.html">Book an appointment</a>
             <a class="btn btn-outline" href="/callback.html">Request a call back</a>
           </div>
         </div>
-        <!-- A simple drawing made of shapes and text (no photos). -->
-        <div class="hero-art" aria-hidden="true">
-          <svg viewBox="0 0 400 290">
-            <rect x="30" y="25" width="340" height="235" rx="18" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.35)"/>
-            <text x="62" y="75" fill="#fff" opacity="0.8" font-size="14" font-family="system-ui" letter-spacing="2">NOW SERVING</text>
-            <text x="60" y="132" fill="#fff" font-size="52" font-weight="700" font-family="system-ui">GEN-012</text>
-            <path d="M262 62h18l8-18 12 36 8-18h24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
-            <rect x="62" y="158" width="276" height="1" fill="rgba(255,255,255,0.35)"/>
-            <text x="62" y="192" fill="#fff" opacity="0.9" font-size="16" font-family="system-ui">Your token  GEN-015  ·  3 ahead</text>
-            <text x="62" y="222" fill="#fff" opacity="0.9" font-size="16" font-family="system-ui">Estimated wait  ~12 min</text>
-          </svg>
+        <!-- Proof, not a picture of it: the real wait for a new patient per department (home.js, every 5 s) -->
+        <div class="hero-waits">
+          <h2 id="waits-title">Wait for a new patient right now</h2>
+          <ul class="hero-waits-list" id="hero-waits" aria-labelledby="waits-title" aria-live="polite">
+            <li class="hero-waits-empty">Checking the queues…</li>
+          </ul>
         </div>
       </div>
     </section>
 
-    <!-- 4b. LIVE "NOW SERVING" STRIP (home.js fills it from the queue API every 5 s) -->
-    <section class="ns-strip" aria-label="Now serving">
-      <div class="wrap ns-inner">
-        <span class="ns-label"><span class="live-dot"></span>Now serving</span>
-        <div id="ns-items" aria-live="polite"><span class="muted">Loading…</span></div>
-      </div>
-    </section>
-
-    <!-- 4c. SERVICE CARDS -->
-    <section id="services" class="wrap section">
-      <h2>Our services</h2>
-      <p class="lead">Everything you need on one network, updated live.</p>
-      <div class="service-cards">
-        <a class="service-card" href="/index.html#display">
-          <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4z"/><path d="M10 7v10" stroke-dasharray="2 2"/></svg></span>
-          <h3>OPD Queue</h3>
-          <p>See who is being called now and how long the wait is.</p>
-          <span class="stat" id="stat-opd">…</span>
-        </a>
-        <a class="service-card" href="/index.html#beds">
-          <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6v13M3 15h18v4M21 15v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="12" r="1.6"/></svg></span>
-          <h3>Bed Availability</h3>
-          <p>Free and occupied beds in General, ICU and Emergency wards.</p>
-          <span class="stat" id="stat-beds">…</span>
-        </a>
-        <a class="service-card" href="/schedule.html">
-          <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
-          <h3>Doctor Schedule</h3>
-          <p>Weekly OPD timings and who is on duty right now.</p>
-          <span class="stat" id="stat-duty">…</span>
-        </a>
-        <a class="service-card" href="/ambulance.html">
-          <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17V7h12v10M14 10h4l4 4v3h-8"/><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="17.5" r="2"/><path d="M8 9.5v4M6 11.5h4"/></svg></span>
-          <h3>Ambulance</h3>
-          <p>Request, dispatch and track ambulances.</p>
-          <span class="stat" id="stat-amb">…</span>
-        </a>
-        <a class="service-card" href="/pharmacy.html">
-          <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 4h6v3H9zM12 11v5M9.5 13.5h5"/></svg></span>
-          <h3>Pharmacy</h3>
-          <p>Medicines and supplies, with low-stock and expiry alerts.</p>
-          <span class="stat">Search medicines</span>
-        </a>
-      </div>
-    </section>
-
-    <!-- SPECIALITIES (from the data file) -->
-    <section id="specialities" class="wrap section">
-      <h2>Find a doctor by speciality</h2>
-      <p class="lead">Pick a speciality and we'll call you back to book.</p>
-      <div id="spec-grid" class="spec-grid"></div>
-    </section>
-
-    <!-- HOSPITALS (from the data file, grouped by state) -->
-    <section id="hospitals" class="wrap section">
-      <h2>Our hospitals</h2>
-      <p class="lead">mediQ hospitals across India.</p>
-      <div id="hospital-list" class="hospital-groups"></div>
-    </section>
-
-    <!-- 5. QUICK ENQUIRY FORM (saved by POST /api/enquiries) -->
-    <section id="enquiry" class="section enquiry-band">
-      <div class="wrap enquiry-inner">
+    <!-- 1. HOW IT WORKS: three steps beside the patient's own screen -->
+    <section class="home-section" aria-labelledby="how-title">
+      <div class="wrap split">
         <div>
-          <h2>Quick enquiry</h2>
-          <p class="lead">Leave your number and our team will call you back, usually within a few hours.</p>
+          <h2 id="how-title">Wait at home, not in a corridor</h2>
+          <p class="section-lead">Book a time with a doctor, then follow your place in the queue on your phone.</p>
+          <ol class="steps">
+            <li><h3>Book a time</h3><p>Choose a speciality, a doctor and a time that suits you. It takes about a minute.</p></li>
+            <li><h3>Tap "I've arrived"</h3><p>When you reach the hospital you get a token and see how many people are ahead of you.</p></li>
+            <li><h3>Walk in when it's your turn</h3><p>Your phone tells you which room to go to. No names shouted across a hall.</p></li>
+          </ol>
+          <a class="btn btn-book" href="/book.html">Book an appointment</a>
+        </div>
+        <div class="phone" role="img" aria-label="Example of the My appointments screen: token GEN-014, it's your turn, go to Room 3">
+          <div class="phone-screen" aria-hidden="true">
+            <p class="ps-day">Today, 10:30</p>
+            <p class="ps-doc">Dr. Meera Rao<small>General Medicine</small></p>
+            <p class="ps-token">Your token<b>GEN-014</b></p>
+            <div class="pt-turn">It's your turn. Please go to Room 3.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. SPECIALITIES, led by a photograph (list filled from the data file by home.js) -->
+    <section id="specialities" class="home-section" aria-labelledby="spec-title">
+      <div class="wrap split">
+        <figure class="photo"><img src="img/doctors-at-work.jpg" alt="A doctor listening to a patient at a medical camp" width="1200" height="1160" loading="lazy"></figure>
+        <div>
+          <h2 id="spec-title">Find the right doctor</h2>
+          <p class="section-lead">Not sure who to see? Pick the closest match and our team will call you to help you book.</p>
+          <ul id="spec-list" class="spec-list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. LIVE ACROSS THE NETWORK (home.js fills these every 5 seconds) -->
+    <section class="live-band" aria-labelledby="live-title">
+      <div class="wrap">
+        <h2 id="live-title">Live across the network</h2>
+        <p class="section-lead">These numbers come straight from our hospitals and update every few seconds.</p>
+        <ul class="live-facts" aria-live="polite">
+          <li><b id="stat-opd">–</b><span>patients waiting in OPD</span></li>
+          <li><b id="stat-beds">–</b><span>beds free right now</span><a href="/index.html#beds">Bed availability</a></li>
+          <li><b id="stat-duty">–</b><span>doctors on duty</span><a href="/schedule.html">Doctor timetable</a></li>
+          <li><b id="stat-amb">–</b><span>ambulances ready</span><a href="/ambulance.html">Ambulance</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 4. HOSPITALS: a directory grouped by state (filled by home.js) -->
+    <section id="hospitals" class="home-section" aria-labelledby="hosp-title">
+      <div class="wrap">
+        <div class="split">
+          <div>
+            <h2 id="hosp-title">Our hospitals</h2>
+            <p class="section-lead">One booking and one queue across every mediQ hospital, wherever you are.</p>
+          </div>
+          <figure class="photo"><img src="img/waiting-room.jpg" alt="A quiet, bright hospital waiting room" width="1340" height="1260" loading="lazy"></figure>
+        </div>
+        <div id="hospital-list" class="hospital-dir"></div>
+      </div>
+    </section>
+
+    <!-- 5. RATHER TALK TO SOMEONE? (saved by POST /api/enquiries) -->
+    <section id="enquiry" class="home-section talk" aria-labelledby="talk-title">
+      <div class="wrap split">
+        <div>
+          <h2 id="talk-title">Rather talk to someone?</h2>
+          <p class="section-lead">Leave your number and our team will call you back, usually within a few hours.</p>
         </div>
         <form id="enquiry-form" class="enquiry-form">
           <label class="full">Your name <input name="name" required maxlength="100" autocomplete="name"></label>
@@ -117,7 +118,7 @@
             <span class="phone-row">
               <select name="country_code" aria-label="Country code"></select>
               <input name="mobile" type="tel" required inputmode="numeric" autocomplete="tel-national"
-                     placeholder="98765 43210" aria-label="Mobile number">
+                     aria-label="Mobile number">
             </span>
           </label>
           <label class="full">Speciality
@@ -127,7 +128,7 @@
             <input type="checkbox" name="consent" required>
             I agree that mediQ Health may call or message me about this enquiry.
           </label>
-          <button type="submit">Submit</button>
+          <button type="submit">Call me back</button>
           <p id="enquiry-msg" class="full" role="status"></p>
         </form>
       </div>
@@ -138,6 +139,7 @@
   <div id="site-footer"></div>
 
   <script src="site.js"></script>
+  <script src="gradient-ascii.js"></script>
   <script src="home.js"></script>
 </body>
 </html>

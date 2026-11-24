@@ -194,5 +194,5 @@ def test_patient_pages_are_served_and_linked():
         assert '<script src="core.js"></script>' in html and 'id="app-bar"' in html, page
         assert html.index('src="patient.js"') < html.index(f'src="{script}"'), page
         assert client.get(f"/{script}").status_code == 200
-    assert 'href="/book.html">Book Appointment' in client.get("/site.js").text      # no longer "coming soon"
+    assert 'href="/book.html">Book an appointment' in client.get("/site.js").text      # no longer "coming soon"
     assert 'patient: "/my-appointments.html"' in client.get("/core.js").text      # where patients land

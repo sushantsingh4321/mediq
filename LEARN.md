@@ -2043,3 +2043,27 @@ on the real site or on your Mac:
 
 Also good to know: `vercel dev` reads your **`.env`**, and an empty
 `DATABASE_URL=` line there wins over other files. So locally it uses `mediq.db`.
+
+## Part 20. The redesign, step 2: a new home page, header and footer
+
+**What changed**
+- **One header bar** (drawn by `frontend/site.js` on every website page): logo, four menus,
+  a search icon, an Emergency button (108 and 112, the real Indian numbers), Log in, and
+  the one main button, **Book an appointment**. On small screens the menus fold behind a
+  menu button. A hidden **"Skip to content"** link appears when you press Tab, so keyboard
+  users can jump past the menu.
+- **The home page has one idea per screen**: the hero (live waits), "How it works" (three
+  steps beside a picture of the patient's phone), specialities beside a photo, one navy band
+  of live numbers, the hospitals as a plain directory, and the call-back form.
+- **Two real photos** in `frontend/img/`, borrowed under Creative Commons licences. Those
+  licences say *you must name the author*, so the footer has a credits line (filled by `home.js`).
+
+**Ideas worth remembering**
+- *Prove, don't claim.* Every number on the page (waits, beds, doctors, ambulances) comes from
+  the API. If the API says 0, the page says 0.
+- *A list beats a grid of identical boxes.* The old page had five same-size "service cards";
+  the new one uses rows with lines between them, which are easier to scan.
+- *Class names can clash.* The phone picture first used `.ph-day`, but `.ph-` already meant
+  "pharmacy" in style.css, so it became `.ps-` ("phone screen").
+- *Tests guard old promises.* `test_frontend_urls` refused a full web address in `home.js`
+  (it stops a server address being hard-coded), so the photo credit is plain text.

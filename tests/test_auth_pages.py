@@ -26,7 +26,7 @@ def test_login_and_signup_pages_are_served():
 def test_scripts_send_the_login_token():
     core = client.get("/core.js").text          # the shared helpers (design system step 1)
     assert "Authorization" in core and "goToLogin" in core
-    assert "logout-btn" in client.get("/site.js").text
+    assert "data-logout" in client.get("/site.js").text      # the website's Log out link
     # Every page loads core.js in <head>, so the helpers and the theme are ready early
     for page in ["/login.html", "/index.html", "/admin.html", "/design.html"]:
         assert '<script src="core.js"></script>' in client.get(page).text, page

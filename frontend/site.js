@@ -52,107 +52,122 @@
       <span>medi<span class="q">Q</span></span><small>Health</small>
     </a>`;
 
-  const HEADER = `
-    <div class="topstrip">
-      <div class="wrap topstrip-inner">
-        <div class="quick-links">
-          <a href="/#specialities">Find a Doctor</a>
-          <a href="#" data-soon="My Reports">My Reports</a>
-          <a href="#site-footer">Contact Us</a>
-        </div>
-        <div class="helplines" id="sh-helplines"></div>
-        <!-- "Log in / Sign up", or "Asha Patel · Logout" (filled in below) -->
-        <div class="account" id="sh-account"></div>
-      </div>
-    </div>
+  // Small drawn icons (SVG, in the text colour). Never "▾" or "☰" characters.
+  const ICON = {
+    chevron: `<svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>`,
+    search: `<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.75"/><path d="M10.5 10.5L14 14"/></svg>`,
+    menu: `<svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"
+             stroke-linecap="round" aria-hidden="true"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/></svg>`,
+  };
 
+  // One bar: logo · menu · search · Emergency · account · Book an appointment
+  const HEADER = `
+    <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header">
       <div class="wrap header-inner">
         ${LOGO}
 
-        <form class="site-search" role="search">
-          <input type="search" name="q" placeholder="Search hospitals, specialities, conditions"
-                 aria-label="Search the site" autocomplete="off">
-          <button type="submit">Search</button>
-          <div class="search-results" hidden></div>
-        </form>
-
-        <div class="header-actions">
-          <div class="dropdown emergency">
-            <button type="button" class="btn btn-danger" data-toggle aria-expanded="false">Emergency ▾</button>
-            <div class="panel" id="sh-emergency"><p class="note">Loading…</p></div>
-          </div>
-          <a class="btn btn-outline callback" href="/callback.html">Request Call Back</a>
-          <button type="button" class="hamburger" aria-label="Open menu" aria-expanded="false">☰</button>
-        </div>
-      </div>
-
-      <nav class="site-menu" aria-label="Main menu">
-        <div class="wrap menu-inner">
+        <nav class="site-menu" id="site-menu" aria-label="Main menu">
           <div class="dropdown">
-            <button type="button" data-toggle aria-expanded="false">Hospitals ▾</button>
+            <button type="button" data-toggle aria-expanded="false">Hospitals ${ICON.chevron}</button>
             <div class="panel mega" id="sh-hospitals"><p class="note">Loading…</p></div>
           </div>
           <div class="dropdown">
-            <button type="button" data-toggle aria-expanded="false">Specialities ▾</button>
+            <button type="button" data-toggle aria-expanded="false">Specialities ${ICON.chevron}</button>
             <div class="panel mega" id="sh-specialities"><p class="note">Loading…</p></div>
           </div>
           <div class="dropdown">
-            <button type="button" data-toggle aria-expanded="false">Services ▾</button>
+            <button type="button" data-toggle aria-expanded="false">Services ${ICON.chevron}</button>
             <div class="panel">
-              <a href="/ambulance.html">Ambulance (staff dispatch)</a>
-              <a href="/index.html#beds">Bed Availability</a>
-              <a href="/pharmacy.html">Pharmacy / Inventory</a>
-              <a href="/#enquiry">Health Checkups</a>
+              <a href="/book.html">Book an appointment</a>
+              <a href="/my-appointments.html">My appointments</a>
+              <a href="/schedule.html">Doctor timetable</a>
+              <a href="/pharmacy.html">Find a medicine</a>
+              <a href="/index.html#beds">Bed availability</a>
+              <a href="/callback.html">Request a call back</a>
             </div>
           </div>
           <div class="dropdown">
-            <button type="button" data-toggle aria-expanded="false">OPD System ▾</button>
+            <button type="button" data-toggle aria-expanded="false">For staff ${ICON.chevron}</button>
             <div class="panel">
               ${OPD_PAGES.map(p => `<a href="${p.href}">${p.name}</a>`).join("")}
             </div>
           </div>
-          <a class="mobile-only menu-link" href="/callback.html">Request Call Back</a>
-          <a class="btn btn-book" href="/book.html">Book Appointment</a>
+          <div class="menu-account" id="sh-account-menu"></div>
+        </nav>
+
+        <div class="header-actions">
+          <div class="dropdown search-dd">
+            <button type="button" class="icon-btn" data-toggle aria-expanded="false" aria-label="Search the site">${ICON.search}</button>
+            <div class="panel search-panel">
+              <form class="site-search" role="search">
+                <input type="search" name="q" placeholder="Hospital, speciality or condition"
+                       aria-label="Search the site" autocomplete="off">
+                <div class="search-results" hidden></div>
+              </form>
+            </div>
+          </div>
+          <div class="dropdown emergency">
+            <button type="button" class="btn btn-emergency" data-toggle aria-expanded="false">Emergency ${ICON.chevron}</button>
+            <div class="panel" id="sh-emergency"><p class="note">Loading…</p></div>
+          </div>
+          <span class="account" id="sh-account"></span>
+          <a class="btn btn-book" href="/book.html">Book an appointment</a>
+          <button type="button" class="icon-btn hamburger" aria-label="Open menu" aria-expanded="false"
+                  aria-controls="site-menu">${ICON.menu}</button>
         </div>
-      </nav>
+      </div>
     </header>`;
 
   const FOOTER = `
     <footer class="site-footer">
       <div class="wrap footer-grid">
-        <div>
+        <div class="footer-brand">
           ${LOGO}
           <p id="sf-tagline"></p>
           <address id="sf-office"></address>
         </div>
         <div>
-          <h4>Our hospitals</h4>
+          <h2>Hospitals</h2>
           <ul id="sf-hospitals"></ul>
         </div>
         <div>
-          <h4>Helplines</h4>
+          <h2>In an emergency</h2>
           <ul id="sf-helplines"></ul>
           <p id="sf-email"></p>
         </div>
         <div>
-          <h4>Quick links</h4>
+          <h2>Patients</h2>
           <ul>
-            <li><a href="/#specialities">Find a Doctor</a></li>
-            <li><a href="/callback.html">Request Call Back</a></li>
-            ${OPD_PAGES.map(p => `<li><a href="${p.href}">${p.name}</a></li>`).join("")}
+            <li><a href="/book.html">Book an appointment</a></li>
+            <li><a href="/my-appointments.html">My appointments</a></li>
+            <li><a href="/schedule.html">Doctor timetable</a></li>
+            <li><a href="/pharmacy.html">Find a medicine</a></li>
+            <li><a href="/callback.html">Request a call back</a></li>
+          </ul>
+          <h2>Staff</h2>
+          <ul>
+            <li><a href="/login.html">Staff log in</a></li>
+            <li><a href="/index.html#doctor">Doctor's desk</a></li>
+            <li><a href="/pharmacy-dispense.html">Pharmacy counter</a></li>
+            <li><a href="/admin.html">Admin console</a></li>
           </ul>
         </div>
       </div>
       <div class="wrap footer-bottom">
-        <span>© 2026 mediQ Health. A fictional demo project.</span>
-        <span>All names, numbers and addresses are made up. In a real emergency in India, dial 112.</span>
+        <span>© 2026 mediQ Health, a fictional demo. Names, hospitals and addresses are made up.</span>
+        <span id="sf-credits"></span>
       </div>
     </footer>`;
 
   const headerBox = document.getElementById("site-header");
   const footerBox = document.getElementById("site-footer");
   if (headerBox) headerBox.innerHTML = HEADER;
+  // The "Skip to content" link jumps here
+  const mainEl = document.querySelector("main");
+  if (mainEl && !mainEl.id) mainEl.id = "main";
   if (footerBox) footerBox.innerHTML = FOOTER;
 
   // ---------------------------------------------------------- 2. fill lists from the API
@@ -162,14 +177,11 @@
   // Numbers are shown as plain text, NOT clickable tel: links, because they are fake
   // and might belong to a real person.
   data.then(d => {
-    fill("sh-helplines", d.helplines.map(h =>
-      `<span>${esc(h.label)} <b>${esc(h.number)}</b></span>`).join(""));
-
     fill("sh-emergency", `
-      <h4>24/7 emergency numbers</h4>
+      <p class="panel-lead">In a medical emergency, call:</p>
       ${d.emergency_numbers.map(e =>
-        `<div class="row"><span>${esc(e.city)}</span><b>${esc(e.number)}</b></div>`).join("")}
-      <p class="note">Demo site: these numbers are fictional.<br>In a real emergency in India, dial <b>112</b>.</p>`);
+        `<div class="row"><span>${esc(e.label)}</span><b class="mono">${esc(e.number)}</b></div>`).join("")}
+      <p class="note">Every mediQ hospital has a 24-hour emergency department.</p>`);
 
     // Group hospitals by state: { "Maharashtra": [h1, h2], "Kerala": [h3] }
     const byState = {};
@@ -186,10 +198,10 @@
     // Footer
     fill("sf-tagline", esc(d.tagline));
     fill("sf-office", esc(d.head_office));
-    fill("sf-hospitals", d.hospitals.slice(0, 4).map(h =>
-      `<li>${esc(h.name)}<br><small>${esc(h.area)}, ${esc(h.city)}</small></li>`).join(""));
-    fill("sf-helplines", d.helplines.map(h => `<li>${esc(h.label)}: <b>${esc(h.number)}</b></li>`).join(""));
-    fill("sf-email", `Email: ${esc(d.email)}`);
+    fill("sf-hospitals", d.hospitals.map(h =>
+      `<li>${esc(h.name.replace(/^mediQ /, ""))} <small>${esc(h.city)}</small></li>`).join(""));
+    fill("sf-helplines", d.helplines.map(h => `<li>${esc(h.label)} <b class="mono">${esc(h.number)}</b></li>`).join(""));
+    fill("sf-email", `Not urgent? <a href="mailto:${esc(d.email)}">${esc(d.email)}</a>`);
 
     buildSearchIndex(d);
   }).catch(err => console.error("Could not load site data:", err));
@@ -199,13 +211,12 @@
   const ROLE_LABEL = { admin: "Admin", doctor: "Doctor", pharmacist: "Pharmacy", patient: "Patient" };
 
   user.then(u => {
-    const box = document.getElementById("sh-account");
-    if (box) {
-      box.innerHTML = u
-        ? `<span class="who">${esc(u.full_name)} <small>(${esc(ROLE_LABEL[u.role] || u.role)})</small></span>
-           <button type="button" class="link-btn" id="logout-btn">Logout</button>`
-        : `<a href="/login.html">Log in</a><a href="/signup.html">Sign up</a>`;
-    }
+    const account = u
+      ? `<span class="who">${esc(u.full_name)} <small>${esc(ROLE_LABEL[u.role] || u.role)}</small></span>
+         <button type="button" class="link-btn" data-logout>Log out</button>`
+      : `<a href="/login.html">Log in</a>`;
+    fill("sh-account", account);
+    fill("sh-account-menu", u ? account : `<a href="/login.html">Log in</a><a href="/signup.html">Create an account</a>`);
 
     // Pages that need a role say so on <body>, e.g. <body data-require-roles="doctor">.
     // (The SERVER checks again on every request; this only gives people a friendly page.)
@@ -224,7 +235,7 @@
 
   // Logout: tell the server to cancel the token, forget it here, go home.
   document.addEventListener("click", async e => {
-    if (!e.target.closest("#logout-btn")) return;
+    if (!e.target.closest("[data-logout]")) return;
     try { await api("/auth/logout", { method: "POST", quiet401: true }); } catch { /* already invalid */ }
     clearToken();
     location.href = "/";
@@ -259,11 +270,12 @@
       if (willOpen) {
         dd.classList.add("open");
         toggle.setAttribute("aria-expanded", "true"); // tells screen readers it's open
+        dd.querySelector('input[type="search"]')?.focus();
       }
       return;
     }
     // Clicking a link inside a menu closes the menus (matters for #links on the same page).
-    if (e.target.closest(".panel a, .menu-link, .menu-inner .btn-book")) {
+    if (e.target.closest(".panel a, .menu-account a")) {
       closeDropdowns();
       closeMobileMenu();
     }
