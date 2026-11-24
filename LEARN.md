@@ -329,6 +329,10 @@ Always escape user text before inserting it as HTML.
 
 ## Part 4. A request's full journey
 
+(This was the journey when a reception desk handed out tokens. The desk was
+removed in Part 17; bookings will follow the same path through `store.add_token`
+and `to_view`.)
+
 ```
 [Reception page] --POST /api/tokens {"patient_name":"Asha","department_id":1}-->
    [FastAPI] checks data with TokenCreate (models.py)
@@ -357,7 +361,7 @@ Planned growth, roughly in this order (we'll check scope together):
 1. **Save data in a database** (SQLite with SQLModel) so a restart doesn't wipe the queue. Only `store.py` changes.
 2. **Priority queue**: emergency / elderly / pregnant patients jump ahead, with a note on how that changes the maths.
 3. **No-show / skip** a token, and **recall** it.
-4. **Logins** for reception and doctors.
+4. **Logins** for staff (done: Part 10).
 5. **City-wide module**: a separate small FastAPI service that calls `GET /api/hospital/summary` on every hospital and shows "shortest OPD wait near you". mediQ is ready for this already: each hospital copy has its own `MEDIQ_HOSPITAL_ID` and the summary contains numbers only, never patient names.
 6. **Move the frontend to React + Vite** once screens multiply.
 
@@ -450,8 +454,8 @@ mediQ now looks like a hospital-network website for a **fictional** brand,
 | Address | File | What it is |
 |---|---|---|
 | `/` | `home.html` + `home.js` | Website home: hero, service cards, live "Now serving", specialities, hospitals, enquiry form |
-| `/index.html` | `index.html` + `app.js` | The OPD system you already had (Reception, Doctor, Waiting room, Dashboard, Beds) |
-| `/index.html#doctor` | same | Opens the Doctor screen directly (also `#reception`, `#display`, `#dashboard`, `#beds`) |
+| `/index.html` | `index.html` + `app.js` | The OPD system you already had (Doctor, Waiting room, Dashboard, Beds) |
+| `/index.html#doctor` | same | Opens the Doctor screen directly (also `#display`, `#dashboard`, `#beds`) |
 
 `/` used to show `index.html`. A small route in `main.py` (`home_page`) now sends
 `home.html` instead; `index.html` still works at its own address.
@@ -677,7 +681,7 @@ does, and checks that unsigned or wrongly-signed webhooks get 403.
 ## Part 10. Accounts and database
 
 **What it does:** people sign up and log in. Each account has a **role**
-(patient, receptionist, doctor, admin) and the server only lets each role do
+(patient, doctor, pharmacist, admin) and the server only lets each role do
 its own job. Accounts are kept in a real **database**, so they survive restarts.
 
 ### 10.1 The files
@@ -895,9 +899,9 @@ row is deleted.
 | Role | Can |
 |---|---|
 | patient | Website, enquiries, call backs, own account (every new sign-up) |
-| receptionist | Register patients for tokens, call-back and enquiry lists, beds |
-| doctor | Call next / finish, see the queue, beds |
-| admin | Everything, including the dashboard and creating staff accounts |
+| doctor | Call next / finish, see the queue, beds, ambulance dispatch, write prescriptions |
+| pharmacist | The pharmacy (Part 16) |
+| admin | Everything, including the dashboard, call-back and enquiry lists, and creating staff accounts |
 
 The role is read **from the database on every request**, not from the token.
 So if an admin changes someone's role, it applies on their very next click.
@@ -908,14 +912,14 @@ that's only for friendliness: anyone can send requests without our page.
 
 The first admin is created on start-up from `ADMIN_EMAIL` and `ADMIN_PASSWORD`
 in `.env` (`seed_first_admin` in `routers/auth.py`), only if no admin exists.
-That admin then creates doctors and receptionists with `POST /api/auth/users`.
+That admin then creates doctors and pharmacists with `POST /api/auth/users`.
 
 ### 10.10 The browser side
 
 ```
 login.html --POST /api/auth/login--> server checks password --> {access_token, user}
 auth.js saves the token in localStorage and goes to your page:
-    admin -> Dashboard, doctor -> Doctor, receptionist -> Reception, patient -> home
+    admin -> Dashboard, doctor -> Doctor, pharmacist -> Dispense, patient -> home
 every page: site.js sends "Authorization: Bearer <token>" with each API call
             and shows "Your Name (Role) · Logout" in the top strip
 server answers 401 (expired / logged out) --> forget token --> login.html?next=<this page>
@@ -1113,7 +1117,7 @@ In SQLAlchemy: `select(User.role, func.count()).group_by(User.role)`. It returns
 1. You can't remove **your own** admin role, so nobody locks every admin out by accident (**400**).
 2. A doctor who still has OPD sessions can't stop being a doctor until those are
    removed on the schedule page (**409**). Otherwise the timetable would list a
-   receptionist as "on duty".
+   pharmacist as "on duty".
 3. The change applies on the person's **next click**, with no new login, because
    every request reads the role from the database (Part 10.9).
 
@@ -1180,7 +1184,7 @@ one from the other: `Department.model_validate(row)`.
 
 The old store kept a counter in memory (`GEN-` 1, 2, 3...). Now each token saves
 its `seq`, and the next number is `MAX(seq) + 1` for that department. A
-**unique constraint** on `(department_id, seq)` stops two receptionists getting
+**unique constraint** on `(department_id, seq)` stops two people getting
 the same number at the same instant: the database refuses the second, and
 `add_token` simply tries again.
 
@@ -1254,7 +1258,7 @@ now wherever it dropped the patient. After "cancel", it stays where it was.
 | Action | Who |
 |---|---|
 | See counts (`/availability`) | anyone; numbers only |
-| See the fleet and trips, log and dispatch trips, update location / maintenance | receptionist, doctor, admin |
+| See the fleet and trips, log and dispatch trips, update location / maintenance | doctor, admin |
 | Add an ambulance | admin |
 
 Requests are logged by **staff**, not a public button. A public "send an
@@ -1273,3 +1277,581 @@ one is focused and puts back each trip's chosen ambulance after redrawing.
 2. Add a `priority` (emergency / routine) to trips and list emergencies first (a new column and migration).
 3. Instead of "first free", send the ambulance whose `location` matches the pickup area (start simple: same sector number).
 4. A report: trips per day and average minutes from "requested" to "assigned".
+
+## Part 15. Everyone can look, only staff can act
+
+Before, a patient who opened the Doctor or Beds screen saw "This screen needs a
+doctor account". Now **every screen opens for everyone**, in one of two modes:
+
+| Who | What they see | What they can press |
+|---|---|---|
+| Visitor or patient | Everything, but patient names as initials ("A. P.") | Nothing ("View only" note) |
+| Doctor | Full names | Doctor and Beds buttons |
+| Admin | Full names | Everything |
+
+**Why initials?** A queue or bed list with full names would tell any stranger
+who is in hospital. Initials keep the page useful without giving that away.
+
+How it works:
+
+1. **Backend, "optional login"** (`deps.py`, `get_optional_user`). Normal
+   endpoints use `get_current_user`, which answers 401 if you're not logged in.
+   The queue (`GET /api/departments/{id}/queue`) and beds (`GET /api/wards`) now
+   use `get_optional_user` instead: it returns the user, or `None` for a visitor,
+   and never refuses. Then `is_staff(user)` decides between full names and
+   `initials(name)`.
+2. **Backend, actions stay protected.** Issuing a token, calling the next
+   patient, admitting to a bed and changing the dashboard still need the right
+   role. This is the real lock: even if someone re-enables a button in the
+   browser, the server still says 403.
+3. **Frontend, `data-action`** (`index.html`, `app.js`). Staff-only controls carry
+   a `data-action` attribute. `screenAllowed()` checks the role and sets
+   `disabled` on them, then shows a "View only" note. A greyed-out button is
+   clearer than a hidden one: people can see what the screen does.
+
+Still staff-only: call-back requests and ambulance dispatch (they show phone
+numbers) and the admin console.
+
+## Part 16. Module 4: Pharmacy
+
+**What it does:** a doctor writes a prescription on the Doctor's desk. The
+pharmacist sees it on the **Dispense** screen. mediQ picks the batches, refuses
+anything expired or not allowed, and prints a GST bill. The pharmacy also
+receives deliveries, keeps a diary of every stock change, and warns about low
+stock and expiry. Anyone can search the catalogue at `/pharmacy.html`.
+
+### 16.1 The files
+
+```
+backend/app/models.py                   DosageForm, DrugSchedule, StorageType, MovementType...
+backend/app/db_models.py                10 tables (MedicineRow ... StockMovementRow), Role.PHARMACIST
+migrations/versions/0006_...py          creates the 10 pharmacy tables
+migrations/versions/0007_...py          adds "pharmacist" to the allowed roles (written by hand, 16.8)
+backend/app/services/pharmacy.py        THE RULES: FEFO, expiry, Schedule H, diary, bill, alerts
+backend/app/services/pharmacy_seed.py   30 demo medicines, 2 suppliers, sample batches
+backend/app/routers/pharmacy.py         the API (/api/pharmacy/...)
+frontend/pharmacy.js                    shared page helpers (menu, pills, money, medicine search box)
+frontend/pharmacy*.html + *.js          Catalogue, Dispense, Stock, Alerts, Suppliers
+frontend/index.html + app.js            "Add prescription" on the Doctor's desk
+tests/test_pharmacy_*.py                db, rules, api, pages, seed (5 files)
+```
+
+The rules live in `services/`, **not** in the router. A router is about the web
+(URLs, JSON, logins). A service is plain Python, so the tests can call
+`ph.dispense(...)` directly with a fixed "today", and the same rule is used by
+every URL that needs it (receiving stock alone and receiving a purchase order).
+
+### 16.2 How the tables fit together
+
+```
+suppliers ──< medicine_batches >── medicines        a batch = one delivery of one medicine
+                     │                  │
+                     │                  └──< prescription_items >── prescriptions   (doctor writes)
+                     │                                                    │
+                     └──< dispensation_items >── dispensations ───────────┘        (pharmacy hands out)
+
+stock_movements: one diary line for EVERY change to a batch's quantity
+purchase_orders ──< purchase_order_items: what we asked a supplier for
+```
+("──<" means "one ... has many ...")
+
+Why **batches** and not just "stock: 500" on the medicine? Because each delivery
+has its own **expiry date**, batch number and price. Without batches you can't
+know which tablets go off first, and a recall ("batch DL2401 is faulty") is
+impossible to trace.
+
+### 16.3 The five rules
+
+| Rule | Where | Plain words |
+|---|---|---|
+| **FEFO** | `pick_batches_fefo` | First Expiry, First Out: take from the batch that expires soonest. Same expiry? The older delivery first. Need 15, soonest batch has 10? Take 10 from it and 5 from the next. |
+| **No expired stock** | `usable_batches` | A batch can be used only if it expires **after** today. Expiring today = already blocked. Expired stock is also refused when receiving. |
+| **Schedule H / H1 / X** | `needs_prescription` | Indian Drugs & Cosmetics Rules: only OTC medicines may be sold without a prescription. With one, you can't give a medicine that isn't on it, or more than prescribed, even across several visits. |
+| **Diary** | `log_movement` | Every change writes a line with a **signed** quantity: +100 received, −10 dispensed, −5 expired. Add up a batch's lines and you get what is on the shelf (a test checks this). |
+| **GST bill** | `dispense`, `BillLine` | Per line: amount = price × quantity, GST = amount × GST%, rounded to the paisa. Also: selling price + GST may never be above the MRP (in India the MRP already includes tax). |
+
+**All or nothing.** `dispense` first does **every** check and only then changes
+stock. If the second medicine on a bill is short, the first isn't taken either.
+Receiving a purchase order works the same way (one bad line = no batches saved).
+
+**The bill keeps its own numbers.** A saved bill stores its totals and, per
+line, the price and GST % *of that day*. If GST or prices change later, old
+bills don't.
+
+**Money is `Decimal`, not `float`.** `0.1 + 0.2` in a float is `0.30000000000000004`.
+Bills must add up exactly, so prices are `Numeric(10, 2)` in the database and
+`Decimal` in Python. The API sends them as plain JSON numbers for the browser.
+
+### 16.4 Who can do what
+
+| Who | Can |
+|---|---|
+| anyone (no login) | search the catalogue: name, strength, price, in stock or not (no cost prices) |
+| doctor | write prescriptions; read prescriptions, batches and alerts |
+| pharmacist | everything else: catalogue, suppliers, stock, dispensing, purchase orders, write-off |
+| admin | everything |
+
+The admin creates pharmacist accounts on the admin page. Pharmacists land on the
+Dispense screen after logging in.
+
+### 16.5 Alerts
+
+`GET /api/pharmacy/alerts` returns three lists:
+- **low stock**: in-date units at or below the medicine's `reorder_level` (expired units don't count; hidden medicines are skipped)
+- **expiring**: batches with stock expiring within 90 days, each tagged with its window: 30, 60 or 90 (a batch expiring in exactly 30 days is in the 30 window)
+- **expired**: batches past their date that still hold stock. "Write off expired stock" sets them to 0 and writes an "expired" diary line for each.
+
+The red number on the "Alerts" menu item = low stock + expiring within 30 days + expired.
+
+### 16.6 The screens
+
+| Page | What to notice in the code |
+|---|---|
+| Catalogue | `medicine_out` adds live numbers (stock, next batch's price) to each medicine |
+| Dispense | the **FEFO preview** in `pharmacy-dispense.js` repeats the server's rule so you see the batches *before* pressing the button; the server still decides |
+| Stock | live "price + GST ≤ MRP" hint while you type |
+| Alerts | the boxes are `<button aria-pressed>`: a filter you can use with the keyboard |
+| Print | `@media print` + `body:has(#bill-area:not([hidden]))`: while a bill is open, printing shows only the bill, black on white, even in dark mode |
+
+The medicine search box is a `<datalist>`: the browser shows suggestions and
+handles the arrow keys and Enter for us.
+
+### 16.7 The demo data
+
+`pharmacy_seed.py` runs at start-up **only if there are no medicines**, so it
+never touches a catalogue you filled in. Batches are dated **relative to today**,
+so the alerts always have something to show: Mox 500 and Cetzine 10 expire
+within 30 days, Shelcal within 60, Montair LC within 90, one Combiflam batch is
+already expired, Galvus / Huminsulin / Asthalin are low, Addwize 10 (Schedule X)
+is out of stock. Prices are examples; GST is 5%.
+
+To start the pharmacy again from the demo data: stop the server, delete
+`mediq.db` (this deletes **everything**, accounts too), start the server.
+
+### 16.8 Lessons from building it
+
+1. **Alembic doesn't notice a new value in an Enum.** Adding `PHARMACIST` to
+   `Role` changed nothing in the database: its CHECK rule still only allowed
+   four roles. Migration 0007 was written by hand.
+2. **Rebuilding a table can delete other tables' rows.** SQLite changes a CHECK
+   rule by copying `users` and dropping the old table. With foreign keys on,
+   "drop users" counted as deleting every user, and `ON DELETE CASCADE` wiped
+   their OPD sessions. `migrations/env.py` now switches foreign keys off while
+   migrating and runs `PRAGMA foreign_key_check` afterwards. Found by testing
+   the migration on a **copy** of the database first: always do that.
+3. **`[hidden]` can lose to a class.** `.ui-button { display: inline-flex }`
+   beat the `hidden` attribute, so a logged-out visitor saw "Add medicine".
+   `style.css` now says `[hidden] { display: none !important; }`.
+
+### 16.9 Try it
+
+1. Admin page: create a **Pharmacist** and a **Doctor** account.
+2. As the doctor, Doctor's desk → **Add prescription**: Mox 500, 1-0-1, 5 days (the quantity fills itself in: 10).
+3. As the pharmacist, **Dispense** → pick it. The preview takes the batch expiring in ~20 days first. Dispense, then **Print bill**.
+4. Try a walk-in sale of Mox 500: refused, it's Schedule H.
+5. **Alerts** → "Expired, still on the shelf" → write off the Combiflam batch; see the line in **Stock → Recent stock changes**.
+6. At `/docs`, try `POST /api/pharmacy/purchase-orders` (draft) → `/order` → `/receive`.
+
+### 16.10 Exercises
+
+1. Screens for purchase orders and stock adjustments (the APIs exist).
+2. "Reorder": a button on a low-stock alert that starts a draft purchase order for that medicine.
+3. A Schedule H1 register: a page listing every H1 sale with patient, doctor and quantity (the law requires it).
+4. Returns: a patient brings back an unopened strip. Add it back to its batch (`adjust_stock` with `type: "returned"`) and refund on a credit note.
+5. Hospital GSTIN and drug licence number on the printed bill (new settings in `.env`).
+
+
+## Part 17. Goodbye reception desk: patients book for themselves
+
+mediQ is moving from "a receptionist hands out tokens" to **patients booking
+their own appointments** (the booking pages come in the next steps). Step one
+was taking the reception desk out.
+
+### 17.1 What was removed
+
+| Removed | Was | Now |
+|---|---|---|
+| The **Reception** screen (`index.html#reception`, its code in `app.js`) | Type a name, pick a department, get a token | The OPD page opens on **Doctor**. "Book Appointment" says "coming soon" until booking exists |
+| `POST /api/tokens` | Reception's "give token" route | Tokens now come from bookings (18.4) and from doctors adding walk-ins (18.7) |
+| The **receptionist** role | `Role.RECEPTIONIST`, `reception_only` | Gone. Making an account with that role is refused (**422**) |
+
+`GET /api/tokens/{id}` stays: it's how a patient checks their token's position and wait.
+
+### 17.2 Who does reception's other jobs now
+
+| Job | Before | Now |
+|---|---|---|
+| Call-back requests, website enquiries | receptionist | **admin** (`staff-callbacks.html` needs an admin) |
+| Beds: admit / discharge | receptionist, doctor | doctor (`any_staff` now means "doctors, and admins") |
+| Ambulance dispatch | receptionist, doctor | doctor |
+
+### 17.3 Migration 0008: moving people before changing the rule
+
+```python
+op.execute("UPDATE users SET role = 'admin' WHERE role = 'receptionist'")   # 1. move the people
+with op.batch_alter_table("users", recreate="always") as batch_op:          # 2. then the rule
+    batch_op.alter_column("role", type_=role_type(WITHOUT_RECEPTIONIST), ...)
+```
+
+The **order matters**. If the CHECK rule changed first, every receptionist row
+would break it and the migration would fail. Receptionists become **admins** so
+those people keep their call-back and enquiry work. Undoing the migration allows
+the role again but can't know which admins used to be receptionists, so it moves
+nobody back.
+
+Tested first on a **copy** of `mediq.db` with a pretend receptionist and an OPD
+session: the receptionist became an admin and the session survived (thanks to
+the foreign-key safety in `migrations/env.py`, Part 16.8).
+
+### 17.4 Tests
+
+Queue tests used to make tokens with `POST /api/tokens`. They now use
+`queue_token(name, department_id)` in `tests/helpers.py`, which calls
+`store.add_token`: the same thing bookings will do. Where a receptionist was
+the "staff member who isn't allowed" in a test, a pharmacist or doctor plays
+that part now. New test: the reception route and role are really gone.
+
+## Part 18. Module 5: Patients book their own appointments
+
+Built step by step. This part grows with each step.
+
+### 18.1 The appointments table (migration 0009)
+
+One row = one booked slot with one doctor: *Asha Patel with Dr. Rao, Tue 2 Dec,
+10:20-10:30, "fever for 3 days"*.
+
+| Column | Meaning |
+|---|---|
+| `patient_id` / `patient_name` | the patient's account, and their name. A walk-in may have no account, so `patient_id` can be empty; the name is always there |
+| `doctor_id`, `department_id` | who and where |
+| `date`, `slot_start`, `slot_end` | hospital-local date and times (10-minute slots by default) |
+| `reason` | symptoms, in the patient's words |
+| `status` | `requested`, `accepted`, `rejected`, `cancelled`, `checked_in`, `completed`, `no_show` |
+| `source` | `online` (patient booked) or `walk_in` (doctor added them) |
+| `priority` | higher = seen sooner among bookings at the same time |
+| `token_id` | the queue token (e.g. GEN-012) made for it, once accepted |
+| `reject_reason` | why the doctor said no |
+| `checked_in_at` | when the patient said "I've arrived" (for the 15-minute no-show rule) |
+
+```
+requested --accept--> accepted --"I've arrived"--> checked_in --> completed
+    |                    |  \--15 min after the slot, not arrived--> no_show
+    |                    \--doctor rejects (with a reason)--> rejected
+    \--patient cancels (up to 1 hour before)--> cancelled
+```
+With `auto_accept` on, a booking starts at `accepted`.
+
+**`users.auto_accept`** (true by default) is the doctor's switch. It's a column
+on `users` because doctors are users. Other roles simply ignore it. The
+migration gave every existing account `true` through a **server default**: a
+default the *database* fills in, which is how a new NOT NULL column gets a value
+in rows that already exist.
+
+### 18.2 Rules the database keeps by itself: partial unique indexes
+
+A normal unique index says "no two rows may have the same values". We need
+"no two **active** bookings":
+
+```python
+Index("uq_appointments_doctor_slot", "doctor_id", "date", "slot_start", unique=True,
+      sqlite_where=text("status IN ('requested', 'accepted', 'checked_in')"))
+```
+
+This is a **partial index**: it only contains rows matching the WHERE, so
+uniqueness is only checked among them. So:
+- the same doctor + day + start time can't be booked twice (**no double booking**),
+- but once a booking is cancelled or rejected it leaves the index, and the slot is free again.
+
+A second one, `uq_appointments_patient_doctor_day`, allows **one active booking
+per patient per doctor per day**. Walk-ins without an account have an empty
+`patient_id`, and empty values never clash in a unique index, so several
+walk-ins are fine.
+
+Why in the database and not only in Python? Two patients pressing "Book" at the
+same moment both pass a Python check ("is the slot free? yes"), then both save.
+The database is the one place that sees both, so it refuses the second.
+
+Two CHECK rules complete it: a slot must end after it starts, and a `rejected`
+booking must have a `reject_reason`.
+
+### 18.3 The patient side (step 3)
+
+**Files:** `services/appointments.py` (the rules), `routers/appointments.py` (the
+URLs), `frontend/book.html` + `book.js`, `frontend/my-appointments.html` +
+`my-appointments.js`, `frontend/patient.js` (shared: app bar, menu, login
+check, status pills), `tests/test_appointments_patient.py`.
+
+| URL | Who | Does |
+|---|---|---|
+| `GET /api/doctors?department_id=1` | anyone | doctors with OPD sessions in that department, and their hours |
+| `GET /api/doctors/{id}/slots?date=2026-11-30` | anyone | that day's slots, each `free` or not (`why_not`: "booked" / "past") |
+| `POST /api/appointments` | patient | book a free slot |
+| `GET /api/appointments/me` | patient | my bookings: upcoming first |
+| `POST /api/appointments/{id}/cancel` | the patient who booked | cancel, up to 1 hour before |
+
+**Where slots come from.** No slot is stored anywhere. They are **worked out**
+each time from the doctor's weekly OPD sessions (Part 11): Monday 09:00-13:00
+is cut into 10-minute pieces (09:00, 09:10 ... 12:50). A slot is free when no
+active booking holds it and it hasn't started. Change the timetable and the
+slots change with it, with nothing to keep in step.
+
+**The rules when booking** (`book()` in the service), each with a message that says what to do:
+- the date is today up to 30 days ahead; the time is a real slot of that doctor, in that department, not yet started;
+- the slot is free (else **409** "someone has just booked that slot");
+- you don't already have an active booking with this doctor that day (**409**);
+- a reason of at least 3 characters.
+
+The database also checks the last two (Part 18.2). If two people press "Book"
+in the same instant, both pass the Python check, but the database lets only one
+save. The other gets the same friendly 409 (`except IntegrityError`).
+
+**auto_accept:** on, the booking starts as `accepted`. Off, it starts as
+`requested` and the page says "Waiting for the doctor to accept".
+
+**Cancelling** is allowed while the booking is requested or accepted, until 1
+hour before the slot (exactly 1 hour before still counts). Someone else's
+booking answers **404**, not 403, so nobody can probe which booking numbers exist.
+
+**"Now" in one place.** The service asks `schedule.now_local()` for the time,
+the same clock the OPD duty check uses. Tests replace that one function to
+pretend it's "Monday 08:00", so they work on any day.
+
+**The pages.** Each choice (department, doctor, day, time) is a real
+`<input type="radio">` drawn as a card. So the keyboard (Tab, arrow keys,
+Space) and screen readers work with no extra code. Taken or past times are
+disabled radios, shown dashed. My appointments refreshes every 15 seconds and
+when you come back to the tab, and shows a short note if a status changed
+(for example the doctor accepted).
+
+### 18.4 The doctor side (step 4)
+
+**A token for every accepted booking.** The moment a booking is accepted
+(automatically, or by the doctor), it gets a queue token, `GEN-012`, saved **in
+the same `db.commit()`** as the booking. So there's never a booking without
+its token, or a token without its booking. The patient sees it on My appointments.
+
+**Two new token states** (migration 0010):
+
+| Status | Means | In the live queue? |
+|---|---|---|
+| `booked` | made for a booking; the patient isn't here yet | **no**: "Call next" can't call someone who isn't in the building (step 5 adds "I've arrived") |
+| `cancelled` | its booking was rejected or cancelled | no |
+
+The department queue, the waiting count and the "arrivals per hour" (used by
+the M/M/c maths) only count tokens that are really in the building.
+
+**Queue order** (`QUEUE_ORDER` in `store.py`) is now: **slot time** (tokens
+without a booking use the time they were made), then **priority** (higher
+first), then token number. Note that token **numbers** follow booking order,
+not slot order. Ravi booked second for 09:00 and got GEN-002, Asha booked
+first for 09:20 and got GEN-001, but Ravi is still seen first. The number is
+just a name for the token; the order comes from the slot.
+
+**Two tokens, one number?** Token numbers are `MAX(seq) + 1`. If two bookings
+are saved at the same instant they can pick the same number. The database's
+unique rule refuses the second save, and `save_with_retry` builds it again
+with the next number (up to 3 tries). If instead the refusal was a real rule
+(the slot got taken), it says so with a 409.
+
+| URL | Who | Does |
+|---|---|---|
+| `GET /api/doctor/appointments?start=&days=14&include_closed=` | doctor | my bookings, one group per date, in slot order |
+| `POST /api/appointments/{id}/accept` | the booking's doctor | requested → accepted + token |
+| `POST /api/appointments/{id}/reject` `{"reason": "..."}` | the booking's doctor | → rejected; token cancelled; the patient sees the reason |
+| `GET` / `PATCH /api/doctor/settings` `{"auto_accept": false}` | doctor | the switch |
+
+Another doctor gets **403** "This booking is with another doctor". The page is
+`doctor-appointments.html` (linked from the Doctor's desk): the auto-accept
+switch, a note when bookings need an answer, one table per day, and an inline
+"reason for the patient" box when rejecting. It refreshes every 20 seconds, but
+not while you're typing a reason.
+
+**Lesson: the auto-reloading server runs a migration the moment its file
+appears.** `uvicorn --reload` watches `migrations/`, and the app migrates on
+start. Alembic first generated 0010 **without** the new statuses (it can't see
+Enum changes). The server applied that version straight away, *before* the
+hand edit. The fix: back up `mediq.db`, `alembic downgrade 0009`, then
+`alembic upgrade head` with the corrected file. Next time, stop the server
+while writing a hand-edited migration.
+
+### 18.5 On the day: arrive, wait, get called (step 5)
+
+```
+booking accepted ──> token "booked"   (not in the live queue: the patient isn't here)
+        │
+        │  "I've arrived"  (patient: from 1 h before to 15 min after the slot;
+        │                   doctor: any time that day, even after a no-show)
+        ▼
+checked_in ──> token "waiting"  ──Call next──>  "in_consultation" (Room 3)  ──next/finish──> "done"
+                                                                                              │
+                                                              booking "completed" <───────────┘
+not checked in 15 minutes after the slot ──> booking "no_show", token "cancelled"
+```
+
+**Why check in at all?** Only people in the building should be called. Before,
+the token sat in the queue from the moment it was made. Now "Call next" only
+ever sees `waiting` tokens, and a booked token becomes `waiting` when the patient
+says they've arrived.
+
+**Expected wait** (`queue_view.py`, the old `to_view` moved out of `main.py`):
+for a waiting token, the people ahead of it in queue order. For a booked one,
+the people who would be ahead **if you checked in now**. Either number goes into
+the same `estimate_wait_for_position` as before (Part 2). The patient's card
+says "2 people ahead of you, about 7 minutes" or "You're next.", and once
+called, **"It's your turn. Please go to Room 3."**
+
+**No-shows without a timer.** mediQ has no background job that wakes up every
+minute. Instead `sweep_no_shows()` runs **whenever someone looks**: My
+appointments, the doctor's list, check-in, and Call next. Any accepted booking
+whose check-in window closed more than a moment ago is marked `no_show` and
+its token cancelled. Because Call next sweeps first, a no-show can never be
+called. Same result as a timer, with nothing extra to run or keep alive.
+
+**Completed** is set by the queue itself: when Call next or Finish marks a token
+`done`, `store.complete_appointments` finds the booking with that token and
+marks it `completed`, in the same save.
+
+| URL | Who | Does |
+|---|---|---|
+| `POST /api/appointments/{id}/checkin` | the patient who booked, or the booking's doctor | "I've arrived": token → waiting |
+
+Another patient or another doctor gets **404**. Booking responses now also
+carry `people_ahead`, `estimated_wait_minutes`, `token_room`, `can_check_in`,
+`check_in_opens_at` and `missed_after`.
+
+### 18.6 Notifications: a banner now, SMS later (step 6)
+
+```
+something happens to a booking  ──>  notify(db, booking, "accepted")
+                                        ├─ saves a NotificationRow  ──>  banner on the patient's pages
+                                        └─ sms.send_sms(phone, text) ──>  STUB: one line in the server log
+```
+
+| Event | When | Banner |
+|---|---|---|
+| `booked` / `requested` | the patient books (auto-accepted / waiting for the doctor) | "Booked … your token is GEN-012" |
+| `accepted` | the doctor accepts a request | "Booking accepted" |
+| `rejected` | the doctor rejects | "Booking not accepted" + the doctor's reason |
+| `called` | Call next picks them | **"It's your turn: please go to Room 1"** (phones also buzz) |
+| `no_show` | not checked in 15 minutes after the slot | "Missed appointment" |
+
+No message for what the patient just did themselves (cancel, "I've arrived").
+
+**Saved in the same commit.** `notify()` doesn't commit; the change it describes
+does. So a "rejected" message exists exactly when the booking really is rejected.
+
+**Why a table, and not just "compare the status with last time" in the
+browser?** A saved message survives a reload, works on a second phone, and
+stays until the patient presses **Got it** (`read_at` is set). It's also the
+one place to plug in SMS.
+
+**The banner** is in `patient.js`, so every patient page has it. It checks
+`GET /api/notifications/me` every 15 seconds and when you come back to the tab.
+New ones appear at the top, and with 2 or more there's **Got it, all**. It also
+fires a `mediq:notification` event, so My appointments refreshes the card at
+the same moment.
+
+**The SMS hook** (`services/sms.py`) is deliberately a stub. It logs
+`SMS not sent (stub) to +91…: <text>` in the terminal and keeps the last 200 in
+`OUTBOX` (the tests read it). To send real SMS later, only that one function
+changes, for example using Twilio as `services/telephony.py` already does for
+call-backs. Every caller stays the same.
+
+| URL | Who | Does |
+|---|---|---|
+| `GET /api/notifications/me?unread_only=true` | any logged-in user | their own messages, newest first |
+| `POST /api/notifications/{id}/read` | the owner | "Got it" (someone else's: **404**) |
+| `POST /api/notifications/read-all` | the owner | hide all |
+
+
+### 18.7 Walk-ins (step 7)
+
+With no reception desk, someone who turns up without a booking is added by the
+doctor: **Add a walk-in patient** at the top of `doctor-appointments.html`
+(name, department, optional reason).
+
+`POST /api/doctor/walk-ins` (doctor; an admin may pass `doctor_id`) creates a
+booking with `source = walk_in` that is **already checked in**, because they
+are standing right there, and its token goes straight into the live queue as
+`waiting`. The doctor tells the patient their token number. A walk-in has no
+mediQ account (`patient_id` is empty), so there are no banners for them.
+
+**Where they go in the queue.** A walk-in's "slot" is the moment they arrived.
+With the queue ordered by slot time (18.4), someone arriving at 10:23 goes
+after checked-in bookings for 10:20 and before the one for 10:30. Nobody with
+a booking is pushed back by people who came later.
+
+**Two walk-ins in the same instant.** The "no double booking" index (18.2) also
+covers walk-ins, so two people can't hold the exact same start time. If that
+moment is taken, the walk-in's start moves 1 microsecond later: invisible to
+people, unique for the database.
+
+The doctor must have OPD sessions in the chosen department (otherwise **400**),
+and patients can't add walk-ins (**403**).
+
+This closes the gap from Part 17: patients join the queue by booking and
+checking in, or as a walk-in added by the doctor.
+
+### 18.8 Every route checked (step 8)
+
+`tests/test_route_security.py` asks the app for **all** its routes (more than
+80) and calls each one **without a login**:
+
+- routes on the `PUBLIC` list (each with its reason: website, wait times,
+  doctors and free slots, medicine search, sign-up / login, the public forms,
+  Twilio's webhooks) may answer;
+- **every other route must answer 401**, and must also check the **role**
+  (`require_roles`), except a few that only touch your **own** data
+  (`OWN_DATA`: your account, logout, your messages).
+
+So a route added later without a login check fails this test immediately:
+security by default, not by remembering.
+
+**What the audit found:** `GET /api/tokens/{id}` showed the **full patient
+name** to anyone. Token ids are just 1, 2, 3…, so a stranger could have read
+every patient's name. Now visitors and other patients see initials; staff and
+the token's own patient see the name. (Twilio's webhooks are public by
+necessity and check Twilio's signature. In `DRY_RUN` practice mode there's no
+Twilio, so no signature, which is why `DRY_RUN=false` is a must for real use.)
+
+### 18.9 Edge cases, and a bug a test caught (step 9)
+
+`tests/test_appointments_edge.py` fakes **two people pressing Book at the same
+instant**: the second one's Python check "saw" the slot free, so only the
+database's unique index (18.2) can stop it. The test found a real bug: the
+refusal crashed with a 500 instead of the friendly 409. Step 6 had added
+`db.flush()` inside the booking builder, so the database now said no *there*,
+outside the `try` around `commit()`. `save_with_retry` now wraps both.
+Lesson: a rule enforced by the database is only half done until a test makes
+the database actually refuse.
+
+### 18.10 The whole module on one page
+
+| Who | Page | Can |
+|---|---|---|
+| Patient | `/book.html` | department → doctor → day → free 10-minute slot → reason → book |
+| Patient | `/my-appointments.html` | status, token, cancel (until 1 h before), **I've arrived**, live wait, "It's your turn", banners |
+| Doctor | `/doctor-appointments.html` | add walk-ins, own bookings by day, accept / reject with reason, check in, auto-accept on/off |
+| Doctor | `/index.html#doctor` | **Call next** / Finish, as before: only checked-in patients, in slot order |
+
+| Test file | Covers |
+|---|---|
+| `test_appointments_db.py` | the table's own rules (no double booking, one per patient per doctor per day) |
+| `test_appointments_patient.py` | slots, booking, double booking, cancel rules |
+| `test_appointments_doctor.py` | tokens, slot-time order, doctor's list, reject, manual accept, settings |
+| `test_appointments_flow.py` | check-in window, live queue, expected wait, Call next → completed, no-show |
+| `test_notifications.py` | one message per event, the SMS hook, Got it |
+| `test_walk_ins.py` | walk-ins: checked in, queued by arrival, permissions |
+| `test_route_security.py` | every route: public on purpose, or login + role |
+| `test_appointments_edge.py` | the booking race, no cancel / reject after check-in |
+
+**Try it:** as the admin, give a doctor an OPD session that covers today
+(Doctor schedule). Sign up as a patient, book a slot about 30 minutes from now,
+press **I've arrived**, then as the doctor press **Call next** on the Doctor's
+desk. The patient's page says **"It's your turn"**.
+
+**Exercises**
+1. A real SMS: change only `services/sms.py` (Twilio is already set up for call-backs).
+2. Let the doctor mark a booking **urgent** (`priority = 1`) from their list.
+3. Requests nobody answered: turn `requested` bookings whose time has passed into `rejected` ("the doctor didn't answer in time") in `sweep_no_shows`.
+4. A "Now serving" waiting-room screen that shows `GEN-012 → Room 3` from the live queue.

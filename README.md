@@ -51,6 +51,7 @@ Accounts, database, Twilio and time-zone settings live in `.env`; `.env.example`
 
 ## Current limits
 
-FCFS only (no priority queue yet), call recording/transcripts not built yet, ambulance and
-inventory modules not built yet. Data is saved in SQLite (`mediq.db`); see LEARN.md Part 10.5
+Patients book their own appointments (no reception desk); the queue is ordered by slot time, then
+priority. Appointment SMS is a stub (logged, not sent). Call recording/transcripts not built yet, no
+screens yet for pharmacy purchase orders and stock adjustments (their APIs exist). Data is saved in SQLite (`mediq.db`); see LEARN.md Part 10.5
 for moving to PostgreSQL.
