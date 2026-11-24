@@ -1855,3 +1855,191 @@ desk. The patient's page says **"It's your turn"**.
 2. Let the doctor mark a booking **urgent** (`priority = 1`) from their list.
 3. Requests nobody answered: turn `requested` bookings whose time has passed into `rejected` ("the doctor didn't answer in time") in `sweep_no_shows`.
 4. A "Now serving" waiting-room screen that shows `GEN-012 → Room 3` from the live queue.
+
+## Part 19. Going live: Vercel + Neon Postgres
+
+Built step by step; this part grows with each step. The click-by-click guide is DEPLOY.md.
+
+### 19.1 Safety first
+
+`.gitignore` keeps secrets and local data off GitHub: `.env`, `*.db`, `.DS_Store`,
+`__pycache__/`, and `.vercel/` (made by `vercel dev`; it links your computer to
+your Vercel account). `git log --all -- .env mediq.db` showed neither was ever
+committed. `tests/test_deploy_safety.py` fails if that ever changes.
+
+### 19.2 How Vercel runs mediQ
+
+```
+browser ─┬─ /api/...  /docs ───────>  api/index.py  ──>  FastAPI app (backend/app/main.py)  ──>  Neon Postgres
+         ├─ /         ───────────────>  frontend/home.html            (static file)
+         └─ /book.html, /style.css ...─> frontend/...                  (static file)
+```
+
+- **Static files** (HTML, CSS, JS) are served by Vercel directly: fast and free.
+- **`api/index.py`** is a *serverless function*: no always-on server. Vercel
+  starts a copy of the app when a request comes in and may stop it when it's
+  quiet, and it may run several copies at once.
+- `vercel.json` sets this up (`routes`, `outputDirectory: frontend`).
+  `includeFiles` makes sure `backend/` and `migrations/` go into the function.
+
+### 19.3 Relative URLs
+
+Every request in the frontend goes to `/api/...`, never `http://localhost:8000/...`.
+A path starting with `/` means "this same website", so the pages work on your
+Mac and on `https://….vercel.app` with no change. `tests/test_frontend_urls.py`
+keeps it that way.
+
+### 19.4 One database address, two databases
+
+| Where | `DATABASE_URL` | Database |
+|---|---|---|
+| your Mac | (not set) | SQLite file `mediq.db` |
+| Vercel | `postgresql://…neon.tech/neondb?sslmode=require` | Neon Postgres |
+
+**`normalize_database_url`** (config.py) turns `postgresql://` and `postgres://`
+into `postgresql+psycopg2://`. SQLAlchemy 2.1 reads a plain `postgresql://` as
+the newer *psycopg 3* driver, which we don't install, so without this the very
+first request on Neon would have failed. `sslmode=require` = encrypted connection.
+
+**NullPool** (database.py): a normal server keeps a pool of open connections.
+Serverless copies come and go, so leftover pooled connections would pile up on
+Neon. NullPool opens a connection for each piece of work and closes it after.
+
+**Tested on a real PostgreSQL**, a temporary one started locally:
+- All 11 migrations run, undo back to nothing, and run again. All 23 tables,
+  CHECK rules and partial unique indexes are there, and the database matches
+  the models exactly.
+- **The whole test suite passes on PostgreSQL.** To repeat it:
+  `TEST_DATABASE_URL=postgresql://user:pass@localhost/empty_db pytest`.
+
+**What was different on PostgreSQL** (and fixed):
+1. Migrations 0007, 0008, 0010 rebuilt whole tables. SQLite needs that, but
+   PostgreSQL refuses to drop `users` / `tokens` while other tables point at
+   them. They now change the CHECK rule in place on PostgreSQL.
+2. Account times came back as `+05:30` (PostgreSQL answers in *its* time zone).
+   The API now always converts them to UTC.
+
+**Nothing in memory between requests.** Each request may reach a different
+copy of the app, so all data lives in the database. A scan of the code found
+only constants (weekday names, message texts, seed lists) and one danger:
+without `SECRET_KEY`, each copy would invent its **own** random key, and a
+login made on one copy would fail on the next. So on Vercel a missing
+`SECRET_KEY` now stops the app with a clear message.
+
+### 19.5 Start-up: nothing heavy on Vercel
+
+| When the app starts… | On your Mac | On Vercel |
+|---|---|---|
+| migrations (`alembic upgrade head`) | yes | **no** |
+| first admin from `ADMIN_EMAIL` / `ADMIN_PASSWORD` | yes | **no** |
+| demo data (departments, wards, ambulances, 30 medicines) | yes | **no** |
+
+Why not on Vercel? A copy of the app starts on a *cold start* (the first
+request after a quiet spell), and Vercel may start several copies at the same
+moment. Migrating on every start would slow those first requests down, and two
+copies migrating together could get in each other's way. Instead you run it
+**once** from your laptop (`scripts/setup_production.py`, step 6) whenever
+there's a new migration.
+
+`RUN_STARTUP_TASKS` in `main.py` decides. Vercel sets `VERCEL=1` for every
+function, so it's off there; `MEDIQ_STARTUP_TASKS=1` or `0` overrides it.
+
+**No background jobs.** Serverless functions don't keep running between
+requests, so a "check every minute" loop can't exist there. mediQ never had one:
+the no-show check runs **when appointments are loaded** (My appointments, the
+doctor's list, check-in, Call next), Part 18.5. A test checks those four places.
+
+**Call-backs stay in dry run.** `DRY_RUN` counts as "true" unless it's exactly
+`false`, so a forgotten setting can never ring real phones. DEPLOY.md sets
+`DRY_RUN=true` in Vercel explicitly as well.
+
+### 19.6 Setting up the production database: `scripts/setup_production.py`
+
+Because Vercel does no start-up work (19.5), you prepare Neon **from your
+laptop**, once before the first deploy and again after any new migration:
+
+```
+.env.production  (never uploaded: .gitignore has ".env.*")
+    DATABASE_URL=postgresql://…neon.tech/neondb?sslmode=require
+    ADMIN_EMAIL=you@yourhospital.example
+    ADMIN_PASSWORD=a-long-password-only-for-production
+
+.venv/bin/python scripts/setup_production.py
+```
+
+It shows where it will write (host and database, **never** the password),
+asks "Continue? Type yes", then:
+
+1. **migrations:** `alembic upgrade head`, all tables up to date
+2. **the first admin**, from `ADMIN_EMAIL` / `ADMIN_PASSWORD`
+3. **departments:** booking needs them
+4. **sample data:** 30 medicines with batches, wards, ambulances (`--no-sample-data` skips this)
+
+Each step only adds what's missing, so running it again is safe (a test runs
+it twice and checks nothing is doubled).
+
+**Guard rails** (each has a test):
+- it refuses a SQLite address: it's for the production database;
+- it refuses if the **production** admin isn't named in `.env.production`. Your
+  local `.env` also has an admin, and the script must never quietly copy your
+  local password into production;
+- no answer to "Continue?" means **no**, and nothing is touched.
+
+Tried for real on a local PostgreSQL: empty database → version 0011, admin
+`boss@prod.example`, 3 departments, 30 medicines. Then the app, loaded exactly as
+Vercel loads it (`api/index.py`, `VERCEL=1`), let that admin log in and found
+"Dolo 650" in the medicine search.
+
+### 19.7 Every setting in one place: `.env.example`
+
+`.env.example` lists **every** setting the code reads, grouped (database,
+logins, hospital, phone calls, start-up), each with a plain-words comment. It
+holds **no real secrets**: it's the template you copy to `.env` on your Mac, and
+the checklist for Vercel's Environment Variables.
+
+On Vercel you need at least:
+
+| Setting | Value |
+|---|---|
+| `DATABASE_URL` | Neon's connection string (set for you when you add Neon from the Storage tab) |
+| `SECRET_KEY` | a new random key, different from your Mac's |
+| `DRY_RUN` | `true` (no real phone calls yet) |
+
+The rest have sensible defaults. `VERCEL` is set by Vercel itself. The admin
+details go in `.env.production` on your laptop, for `scripts/setup_production.py`.
+
+`tests/test_env_example.py` scans the code for every `os.getenv("…")` and fails
+if one isn't explained in `.env.example`, so the list can't fall behind.
+
+### 19.8 The deployment guide
+
+`DEPLOY.md` is the click-by-click version for going live: commit and push →
+make a production `SECRET_KEY` → import the repo on Vercel (Framework: Other)
+with `SECRET_KEY`, `DRY_RUN`, `HOSPITAL_TIMEZONE` → add Neon from the Storage tab
+(sets `DATABASE_URL`) → run `scripts/setup_production.py` with the **unpooled**
+connection string → **Redeploy** (settings only reach new deployments) → test
+health, sign-up, booking, check-in + Call next, and the pharmacy on the live
+address. It ends with a troubleshooting table and how to ship updates (a new
+migration: run the script *before* pushing). `tests/test_deploy_guide.py` checks
+that the files and commands it mentions really exist.
+
+### 19.9 The dress rehearsal: `vercel dev`
+
+`vercel dev` runs the site on your Mac the way Vercel will (same routes, same
+Python builder) at http://localhost:3000. The full DEPLOY.md Step 7 test passed
+through it: health, home page, admin, staff accounts, OPD session, sign-up,
+booking (GEN-001), "I've arrived", Call next with the "It's your turn" banner,
+prescription and bill. Getting there found three things that would have bitten
+on the real site or on your Mac:
+
+1. **`"maxDuration"` in `vercel.json`** broke Vercel's Python builder
+   (`DEV_BUILDER_RESULT_HAS_MAXDURATION`). Removed: the default time limit is fine.
+2. **Python 3.9.** macOS's built-in `python3` is 3.9; Vercel's helper and mediQ
+   need 3.10 or newer (`cannot import name 'UTC'`). `.python-version` now says
+   **3.12** for Vercel, and DEPLOY.md shows how to give `vercel dev` Python 3.12.
+3. **`vercel link` edited `.gitignore`**, adding `.env*`. Last rule wins, so that
+   would have hidden `.env.example` from git. Removed: the existing `.env` and
+   `.env.*` rules already cover `.env.local`.
+
+Also good to know: `vercel dev` reads your **`.env`**, and an empty
+`DATABASE_URL=` line there wins over other files. So locally it uses `mediq.db`.
