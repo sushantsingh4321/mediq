@@ -150,6 +150,28 @@ window.MEDIQ_HI = {
       "मैं सहमत हूँ कि mediQ Health इस पूछताछ के बारे में मुझे कॉल या मैसेज कर सकता है।",
     "Call me back": "मुझे कॉल करें",
     "Care that doesn't keep you waiting.": "ऐसा इलाज, जिसमें इंतज़ार नहीं।",
+    "24×7 emergency": "24×7 आपातकाल",
+    "Find your nearest hospital": "अपना नज़दीकी अस्पताल खोजें",
+    "Find a doctor": "डॉक्टर खोजें",
+    "Book a doctor at any mediQ hospital, follow your place in the queue on your phone, and walk in when it's your turn.":
+      "किसी भी mediQ अस्पताल में डॉक्टर बुक करें, फ़ोन पर कतार में अपनी जगह देखें, और अपनी बारी आने पर अंदर जाएँ।",
+    "emergency care": "आपातकालीन देखभाल",
+    "hospitals in": "अस्पताल,",
+    "states": "राज्यों में",
+    "specialities": "विशेषज्ञताएँ",
+    "Quick links": "ज़रूरी लिंक",
+    "Our specialities": "हमारी विशेषज्ञताएँ",
+    "Doctors who take the time to explain": "डॉक्टर, जो समय देकर समझाते हैं",
+    "Every OPD session is on the timetable, so you can see which doctor is in, in which room, before you leave home.":
+      "हर OPD सत्र समय-सारणी में है, ताकि घर से निकलने से पहले आप देख सकें कि कौन-सा डॉक्टर किस कमरे में है।",
+    "Weekly OPD timings for every department": "हर विभाग के हफ़्ते भर के OPD समय",
+    "Who is on duty right now, updated live": "अभी कौन ड्यूटी पर है, लाइव जानकारी",
+    "Book online, or ask us to call you back": "ऑनलाइन बुक करें, या हमें कॉल बैक करने को कहें",
+    "See the doctor timetable": "डॉक्टरों की समय-सारणी देखें",
+    "A doctor in a white coat listens to a young patient during a check-up": "सफ़ेद कोट में डॉक्टर जाँच के दौरान एक छोटी मरीज़ की बात सुन रही हैं",
+    "A doctor in a white coat with a stethoscope explains a treatment plan, holding a tablet": "स्टेथोस्कोप के साथ सफ़ेद कोट में डॉक्टर टैबलेट पकड़े इलाज समझा रही हैं",
+    "A smiling doctor in blue scrubs gives a child a check-up": "नीली वर्दी में मुस्कुराती डॉक्टर एक बच्ची की जाँच कर रही हैं",
+    "Photos: Shixart1985 (CC BY 2.0), via Wikimedia Commons": "फ़ोटो: Shixart1985 (CC BY 2.0), Wikimedia Commons से",
 
     // Specialities and conditions (site_content.json)
     "Cardiology": "हृदय रोग",

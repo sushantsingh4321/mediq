@@ -1,48 +1,53 @@
 """
-Home page hero: the GradientASCII background (frontend/gradient-ascii.js) and
-the live waits. Run from the mediq/ folder with:   pytest
+Home page: a bright hospital front page with real photos, the emergency numbers,
+the main action first and the live waits. Run from the mediq/ folder with:   pytest
 """
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
 from backend.app.main import app
 
 client = TestClient(app)
+IMG = Path(__file__).resolve().parents[1] / "frontend" / "img"
 
 
-def test_hero_has_the_effect_and_the_live_waits():
+def test_hero_is_bright_with_a_photo_and_the_live_waits():
     page = client.get("/").text
-    assert 'id="hero-ascii"' in page and 'aria-hidden="true"' in page      # decoration, hidden from screen readers
-    assert page.index('src="gradient-ascii.js"') < page.index('src="home.js"')
-    assert 'id="hero-waits"' in page and 'aria-live="polite"' in page      # real numbers, announced when they change
-    assert "Book an appointment" in page and 'href="/book.html"' in page
-    assert "GEN-012" not in page                                            # no invented "now serving" picture
-    assert 'class="eyebrow"' not in page                                    # no label above the headline
+    assert 'class="hero-photo"' in page and 'src="img/doctor-with-child.jpg"' in page
+    assert 'id="hero-waits"' in page and "Book an appointment" in page and 'href="/book.html"' in page
+    assert "hero-ascii" not in page and "gradient-ascii.js" not in page       # the dark animation is gone
+    assert client.get("/gradient-ascii.js").status_code == 404
+    assert "GradientASCII" not in client.get("/home.js").text
+    assert 'class="eyebrow"' not in page
 
 
-def test_effect_script_is_plain_js_with_fallbacks():
-    js = client.get("/gradient-ascii.js").text
-    assert "window.GradientASCII = { mount }" in js
-    assert 'getContext("webgl2"' in js and "return null" in js              # no WebGL 2: CSS background stays
-    assert "prefers-reduced-motion" in js                                    # "reduce motion": no animation
-    assert "IntersectionObserver" in js                                      # pauses when off screen
-    assert "import " not in js and "useEffect" not in js                     # no React left
-    home = client.get("/home.js").text
-    assert 'shape: "horizon"' in home and "drawHeroWaits" in home
-
-
-def test_home_sections_follow_the_new_design():
+def test_emergency_numbers_and_quick_links_are_in_view():
     page = client.get("/").text
-    # One idea per screen: how it works, specialities, live band, hospitals, call back
+    assert 'class="er-strip"' in page and 'href="tel:108"' in page and 'href="tel:112"' in page
+    for href in ["/book.html", "/schedule.html", "/pharmacy.html", "/index.html#beds", "/callback.html"]:
+        assert f'<a href="{href}">' in page, href
+
+
+def test_photos_are_local_described_and_credited():
+    page = client.get("/").text
+    for name in ["doctor-with-child.jpg", "doctor-consulting.jpg", "checkup.jpg"]:
+        assert f'src="img/{name}"' in page, name
+        assert (IMG / name).exists(), name
+    assert page.count(' alt="') >= 3
+    assert not (IMG / "doctors-at-work.jpg").exists() and not (IMG / "waiting-room.jpg").exists()   # old photos removed
+    js = client.get("/home.js").text
+    assert "sf-credits" in js and "Shixart1985 (CC BY 2.0)" in js
+
+
+def test_hero_facts_are_counted_from_the_data():
+    js = client.get("/home.js").text
+    assert "d.hospitals.length" in js and "d.specialities.length" in js     # never typed in by hand
+    assert "SPEC_ICON" in js                                               # each speciality has an icon
+
+
+def test_home_sections_follow_the_design():
+    page = client.get("/").text
     for part in ['class="steps"', 'id="spec-list"', 'class="live-band"', 'id="hospital-list"', 'id="enquiry-form"']:
         assert part in page, part
-    # The old busy parts are gone
-    for old in ["ns-strip", "service-card", "spec-grid"]:
-        assert old not in page, old
-    # Photos are local files with alt text, and their authors are credited
-    assert 'src="img/doctors-at-work.jpg" alt="' in page and 'src="img/waiting-room.jpg" alt="' in page
-    assert client.get("/img/doctors-at-work.jpg").status_code == 200
-    js = client.get("/home.js").text
-    assert "sf-credits" in js and "Legend1306" in js and "Harrison Keely" in js
-    # Keyboard users can skip the menu
     assert "skip-link" in client.get("/site.js").text and 'id="main"' in page

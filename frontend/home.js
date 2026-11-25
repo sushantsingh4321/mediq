@@ -5,16 +5,35 @@
 
 const { api, esc, data } = window.mediq;
 
+// Line icons (24x24, drawn in the text colour) for the speciality cards and hospital pins
+const icon = (paths, size = 26) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none"
+  stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+const SPEC_ICON = {
+  "Cardiology": '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/><path d="M6 12h2.5l1.5-2.5 2 5 1.5-2.5H18"/>',
+  "Neurology": '<path d="M12 5a3 3 0 0 0-5.5 1.5A3 3 0 0 0 4.5 11a3 3 0 0 0 1 5A3 3 0 0 0 9 19.5a3 3 0 0 0 3-1.5"/><path d="M12 5a3 3 0 0 1 5.5 1.5A3 3 0 0 1 19.5 11a3 3 0 0 1-1 5 3 3 0 0 1-3.5 3.5A3 3 0 0 1 12 18V5z"/>',
+  "Orthopaedics": '<path d="M8 4.5a2.1 2.1 0 0 0-3.3 2.6A2.1 2.1 0 0 0 6.5 10l7.5 7.5a2.1 2.1 0 0 0 2.9 1.8 2.1 2.1 0 0 0 2.6-3.3 2.1 2.1 0 0 0-1.8-2.9L10.2 5.6A2.1 2.1 0 0 0 8 4.5z"/>',
+  "Oncology": '<path d="M12 3c-1.8 0-3 1.4-3 3.2 0 2.3 3 6.3 3 6.3s3-4 3-6.3C15 4.4 13.8 3 12 3z"/><path d="M10.5 11L6 21l3-1.2L10.6 22 13.5 15M13.5 11L18 21l-3-1.2-1.6 2.2"/>',
+  "Paediatrics": '<circle cx="12" cy="8" r="4"/><path d="M10.5 7.5h.01M13.5 7.5h.01M10.6 9.6a2 2 0 0 0 2.8 0"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/>',
+  default: '<path d="M6 3v5a4 4 0 0 0 8 0V3"/><path d="M10 12v2a5 5 0 0 0 10 0v-2"/><circle cx="20" cy="10" r="2"/>',
+};
+const PIN = '<path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>';
+
 // ---------- 1. lists from the data file ----------
 
 data.then(d => {
-  // Specialities: one row each, with a few of the conditions it treats.
+  // Specialities: one card each, with its icon and a few of the conditions it treats.
   document.getElementById("spec-list").innerHTML = d.specialities.map(s => `
-    <li><a href="?speciality=${encodeURIComponent(s.name)}#enquiry">
+    <li><a class="spec-card" href="?speciality=${encodeURIComponent(s.name)}#enquiry">
+      <span class="spec-icon">${icon(SPEC_ICON[s.name] || SPEC_ICON.default)}</span>
       <strong>${esc(s.name)}</strong>
       <small>${s.conditions.slice(0, 3).map(esc).join(", ")}</small>
       <span class="go">Ask us</span>
     </a></li>`).join("");
+
+  // The three facts in the hero, counted from the data (never typed in by hand)
+  document.getElementById("fact-hospitals").textContent = d.hospitals.length;
+  document.getElementById("fact-states").textContent = new Set(d.hospitals.map(h => h.state)).size;
+  document.getElementById("fact-specialities").textContent = d.specialities.length;
 
   // Hospitals grouped by state.
   const byState = {};
@@ -22,7 +41,7 @@ data.then(d => {
   document.getElementById("hospital-list").innerHTML = Object.entries(byState).map(([state, list]) => `
     <div>
       <h3>${esc(state)}</h3>
-      <ul>${list.map(h => `<li><b>${esc(h.name)}</b><small>${esc(h.area)}, ${esc(h.city)}</small></li>`).join("")}</ul>
+      <ul>${list.map(h => `<li>${icon(PIN, 18)}<span><b>${esc(h.name)}</b><small>${esc(h.area)}, ${esc(h.city)}</small></span></li>`).join("")}</ul>
     </div>`).join("");
 
   // Enquiry form dropdowns.
@@ -108,35 +127,11 @@ function drawHeroWaits(stats) {
   }).join("");
 }
 
-// The hero's moving background (gradient-ascii.js). Your settings, unchanged.
-window.GradientASCII?.mount(document.getElementById("hero-ascii"), {
-  colors: ["#1e3fd8", "#f6f8ff", "#a5d8ff", "#38bdf8"],
-  shape: "horizon",
-  characters: " =+xX0S8#@",
-  cellSize: 18,
-  density: 0.8,
-  glyphOpacity: 0.85,
-  glow: 0.2,
-  depthOfField: 0,
-  flicker: 0.2,
-  softness: 0.5,
-  scale: 1,
-  flow: 0.5,
-  speed: 1,
-  gradientOpacity: 0.9,
-  grain: 0.08,
-  variation: 0,
-  mouseInteraction: true,
-  scrambleRadius: 0.1,
-  clickEffect: "wave",
-  intro: true,
-  lightMode: false,
-});
 
 // The photos are borrowed under free licences; their authors are named in the footer.
 const credits = document.getElementById("sf-credits");
 if (credits) credits.textContent =
-  "Photos: Legend1306 (CC BY-SA 4.0) and Harrison Keely (CC BY 4.0), via Wikimedia Commons";
+  "Photos: Shixart1985 (CC BY 2.0), via Wikimedia Commons";
 
 renderLive();
 setInterval(renderLive, 5000); // same 5-second polling as the OPD screens

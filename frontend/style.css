@@ -360,20 +360,11 @@ main.home { max-width: none; padding: 0; }   /* undo the 960px OPD layout */
 .phone-screen .ps-token b { display: block; font-family: var(--font-mono); font-size: 2.25rem; font-weight: 600; color: var(--text); }
 .phone-screen .pt-turn { font-size: var(--fs-md); }
 
-/* 2. Specialities: a photograph beside a plain list */
+/* Photographs */
 .photo { margin: 0; border-radius: var(--radius); overflow: hidden; background: var(--tint); }
 .photo img { display: block; width: 100%; height: 100%; aspect-ratio: 1 / 1; object-fit: cover;
              transition: transform 600ms var(--ease); }
 .photo:hover img { transform: scale(1.02); }
-.spec-list { list-style: none; margin: 36px 0 0; padding: 0; border-top: 1px solid var(--border); }
-.spec-list li { border-bottom: 1px solid var(--border); }
-.spec-list a { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; align-items: center; padding: 16px 4px;
-               color: var(--text); text-decoration: none; }
-.spec-list a:hover { background: var(--tint); }
-.spec-list strong { font-size: var(--fs-md); font-weight: 600; }
-.spec-list small { grid-column: 1; color: var(--text-muted); }
-.spec-list .go { grid-row: 1 / span 2; grid-column: 2; color: var(--link); font-weight: 600; white-space: nowrap; }
-
 /* 3. Live across the network: the one navy band */
 .live-band { padding: clamp(64px, 9vh, 104px) 0; background: var(--night); color: #fff; }
 .live-band h2 { color: #fff; }
@@ -875,60 +866,115 @@ button.ph-tile:hover { border-color: var(--border-input); }
 @media (max-width: 480px) { .pt-banner { flex-direction: column; align-items: stretch; } }
 
 /* =====================================================================
-   HOME HERO (home.html): the text-character horizon (gradient-ascii.js)
-   fills the hero. Its bright sky owns the top; the headline, the actions
-   and the live waits stand on the dark horizon below it.
-   Dark in both themes: the effect is drawn for a dark ground.
+   HOME PAGE: a bright hospital front page (home.html)
+   Light, calm and clinical: white and soft blue, real photos of care,
+   emergency numbers in view, the main action first.
    ===================================================================== */
-.hero { position: relative; isolation: isolate; overflow: hidden; color: #fff; background: #050b1f;
-        min-height: clamp(620px, calc(100svh - 150px), 840px); display: flex; }
-/* The effect's box. Its own background is the no-WebGL fallback: the same sky, standing still. */
-.hero-field { position: absolute; inset: 0; z-index: -2;
-              background: radial-gradient(130% 75% at 50% -8%, #f6f8ff 0%, #a5d8ff 16%, #38bdf8 30%, #1e3fd8 48%, #050b1f 74%); }
-.gradient-ascii-container { overflow: hidden; }
-.gradient-ascii-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
-/* Keep the words readable: the lower part, where they stand, is darkened (no blur, no glass) */
-.hero::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-                background: linear-gradient(180deg, rgba(5, 11, 31, 0) 0%, rgba(5, 11, 31, 0) 34%,
-                                                    rgba(5, 11, 31, .74) 60%, rgba(5, 11, 31, .92) 100%); }
+:root {
+  --hero-bg: #eef5ff;  --er-bg: #fdeceb;  --er-text: #9b1c14;
+  --card-radius: 14px; --icon-bg: #e3edff;
+}
+:root[data-theme="dark"] {
+  --hero-bg: #0a1638;  --er-bg: #3a1514;  --er-text: #ffb4ab;
+  --icon-bg: #16275a;
+}
 
-.hero-inner { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(280px, .7fr); gap: 48px;
-              align-items: end; width: 100%; padding-top: clamp(220px, 36vh, 360px); padding-bottom: 56px; }
-.hero h1 { margin: 0; max-width: 16ch; color: #fff; font-size: clamp(2.5rem, 5.6vw, 4.5rem);
-           font-weight: 700; line-height: 1.02; letter-spacing: -0.035em; text-wrap: balance; }
-.hero-lead { margin: 20px 0 0; max-width: 46ch; font-size: 1.1875rem; line-height: 1.55; color: #d7e3ff; }
+/* 0. Emergency strip */
+.er-strip { background: var(--er-bg); color: var(--er-text); font-size: var(--fs-sm); }
+.er-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 24px; min-height: 40px; }
+.er-inner p { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 0; }
+.er-strip a { color: inherit; font-weight: 700; }
+.er-strip strong { margin-right: 6px; }
+
+/* 1. Hero */
+.hero { background: var(--hero-bg); padding: clamp(40px, 6vw, 72px) 0 clamp(72px, 9vw, 112px); }
+.hero-inner { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
+.hero h1 { margin: 0; max-width: 15ch; color: var(--text); font-size: clamp(2.4rem, 4.8vw, 3.75rem); font-weight: 700;
+           line-height: 1.05; letter-spacing: -0.035em; text-wrap: balance; }
+.hero-lead { margin: 20px 0 0; max-width: 46ch; font-size: 1.1875rem; line-height: 1.55; color: var(--text-muted); }
 .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
-.hero-cta .btn { min-height: 48px; padding: 0 22px; font-size: 1rem; }
-.hero .btn-book { background: #f6f8ff; color: var(--ink); border-color: #f6f8ff; }
-.hero .btn-book:hover { background: #fff; }
-.hero .btn-outline { color: #fff; border-color: rgba(255, 255, 255, .7); }
-.hero .btn-outline:hover { background: rgba(255, 255, 255, .1); }
+.hero-cta .btn { min-height: 52px; padding: 0 24px; font-size: 1rem; border-radius: 10px; }
+.hero-cta .btn svg { flex: none; }
+.hero-cta .btn-outline { background: var(--surface); border-color: var(--border); color: var(--text); }
+.hero-cta .btn-outline:hover { border-color: var(--link); color: var(--link); }
+.hero-facts { display: flex; flex-wrap: wrap; gap: 16px 28px; margin: 36px 0 0; padding: 0; list-style: none; }
+.hero-facts li { display: flex; align-items: center; gap: 10px; color: var(--text-muted); }
+.hero-facts svg { flex: none; padding: 8px; width: 40px; height: 40px; border-radius: 50%; background: var(--surface); color: var(--link); }
+.hero-facts b { color: var(--text); font-weight: 700; }
 
-/* Live waits: a plain list on a solid, slightly see-through panel */
-.hero-waits { padding: 20px 22px 8px; background: rgba(5, 11, 31, .8); border: 1px solid rgba(165, 216, 255, .28);
-              border-radius: var(--radius); }
-.hero-waits h2 { margin: 0 0 6px; font-size: 1rem; font-weight: 600; color: #fff; }
+.hero-visual { position: relative; justify-self: end; width: min(100%, 460px); }
+.hero-photo { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; object-position: center 30%;
+              border-radius: 24px; background: var(--tint); }
+/* The live waits float over the photo's lower left corner */
+.hero-waits { position: absolute; left: -56px; bottom: 28px; width: min(320px, 90%); padding: 16px 18px 6px;
+              background: var(--surface); border-radius: var(--card-radius); box-shadow: 0 18px 44px rgba(11, 21, 51, .16); }
+.hero-waits h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: var(--fs-sm); font-weight: 600; color: var(--text); }
 .hero-waits-list { list-style: none; margin: 0; padding: 0; }
-.hero-waits-list li { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; align-items: baseline;
-                      padding: 12px 0; border-top: 1px solid rgba(165, 216, 255, .18); }
+.hero-waits-list li { display: grid; grid-template-columns: 1fr auto; gap: 0 12px; align-items: baseline; padding: 9px 0;
+                      border-top: 1px solid var(--border); }
 .hero-waits-list li:first-child { border-top: 0; }
-.hero-waits-list .dept { font-weight: 600; color: #fff; }
-.hero-waits-list .wait { font-family: var(--font-mono); font-size: 1.375rem; font-weight: 600; color: #a5d8ff; letter-spacing: -0.01em;
-                         font-variant-numeric: tabular-nums; text-align: right; }
-.hero-waits-list .queue { grid-column: 1 / -1; font-size: .875rem; color: #b9c8ea; }
-.hero-waits-empty { display: block !important; color: #b9c8ea; }
+.hero-waits-list .dept { font-weight: 600; font-size: var(--fs-sm); color: var(--text); }
+.hero-waits-list .wait { font-weight: 700; color: var(--link); white-space: nowrap; }
+.hero-waits-list .queue { grid-column: 1 / -1; font-size: .8125rem; color: var(--text-muted); }
+.hero-waits-empty { display: block !important; color: var(--text-muted); font-size: var(--fs-sm); }
 
+/* 2. Quick links: a white bar overlapping the hero's lower edge */
+.quick { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0;
+         margin-top: -44px; padding: 8px; background: var(--surface); border-radius: 18px;
+         box-shadow: 0 18px 44px rgba(11, 21, 51, .10); }
+.quick a { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px; border-radius: 12px;
+           color: var(--text); font-weight: 600; font-size: var(--fs-sm); text-align: center; text-decoration: none; }
+.quick a:hover { background: var(--hero-bg); color: var(--link); }
+.quick svg { padding: 12px; width: 52px; height: 52px; border-radius: 50%; background: var(--icon-bg); color: var(--link); }
+
+/* 3. Speciality cards */
+.sec-intro { margin-bottom: 36px; }
+.spec-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.spec-card { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 24px; background: var(--surface);
+             border: 1px solid var(--border); border-radius: var(--card-radius); color: var(--text); text-decoration: none;
+             transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease), transform var(--t-fast) var(--ease); }
+.spec-card:hover { border-color: color-mix(in srgb, var(--link) 45%, var(--border)); box-shadow: 0 12px 28px rgba(11, 21, 51, .08); transform: translateY(-2px); }
+.spec-icon { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 10px; border-radius: 14px;
+             background: var(--icon-bg); color: var(--link); }
+.spec-card strong { font-size: var(--fs-md); font-weight: 650; }
+.spec-card small { color: var(--text-muted); font-size: var(--fs-sm); line-height: 1.5; }
+.spec-card .go { margin-top: auto; padding-top: 10px; color: var(--link); font-weight: 600; font-size: var(--fs-sm); }
+
+/* 4/5. Sections, photos, ticks */
+.tint-section { background: var(--surface); }
+.photo--tall img { height: auto; aspect-ratio: 4 / 5; object-position: center 20%; border-radius: 20px; }
+.photo--wide { margin-top: 28px; }
+.photo--wide img { height: auto; aspect-ratio: 3 / 2; border-radius: 20px; }
+.photo { border-radius: 20px; }
+.ticks { list-style: none; margin: 28px 0 32px; padding: 0; display: grid; gap: 14px; }
+.ticks li { position: relative; padding-left: 36px; }
+.ticks li::before { content: ""; position: absolute; left: 0; top: 1px; width: 22px; height: 22px; border-radius: 50%; background: var(--icon-bg); }
+/* The tick: an "L" of two borders turned 45° (a check mark, not a stripe down a box) */
+.ticks li::after { content: ""; position: absolute; left: 7px; top: 6px; width: 8px; height: 5px;
+                   border: solid var(--link); border-width: 0 0 2px 2px; transform: rotate(-45deg); }
+
+/* 7. Hospital cards with a pin */
+.hospital-dir li { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; margin-bottom: 10px; background: var(--surface);
+                   border: 1px solid var(--border); border-radius: 12px; }
+.hospital-dir li svg { flex: none; margin-top: 2px; color: var(--link); }
+
+/* Tablets and phones */
 @media (max-width: 900px) {
-  .hero { min-height: 0; }
-  .hero::before { background: linear-gradient(180deg, rgba(5, 11, 31, 0) 0%, rgba(5, 11, 31, .55) 22%,
-                                                      rgba(5, 11, 31, .85) 45%, rgba(5, 11, 31, .94) 100%); }
-  .hero-inner { grid-template-columns: 1fr; gap: 36px; padding-top: 170px; padding-bottom: 40px; }
-  .hero-lead { font-size: 1.0625rem; }
+  .hero-inner { grid-template-columns: 1fr; }
+  .hero-visual { justify-self: center; }
+  .hero-waits { position: relative; z-index: 1; left: auto; bottom: auto; width: 100%; margin-top: -36px; margin-inline: auto; max-width: 92%; }
+  .quick { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .spec-cards { grid-template-columns: 1fr 1fr; }
 }
-@media (max-width: 480px) {
-  .hero-inner { padding-top: 140px; }
+@media (max-width: 560px) {
   .hero-cta .btn { flex: 1 1 100%; justify-content: center; }
+  .hero-facts { gap: 12px; }
+  .quick { grid-template-columns: 1fr 1fr; margin-top: -32px; }
+  .quick a:last-child { grid-column: 1 / -1; }
+  .spec-cards { grid-template-columns: 1fr; }
+  .er-inner > a { display: none; }
 }
+@media (prefers-reduced-motion: reduce) { .spec-card:hover { transform: none; } }
 
 /* =====================================================================
    FLOATING SIDEBAR (shell.js), on every signed-in page.
