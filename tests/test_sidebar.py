@@ -67,3 +67,31 @@ def test_staff_pages_have_no_website_footer():
         assert 'id="site-footer"' not in client.get(f"/{name}.html").text, name
     for name in WEBSITE_PAGES:
         assert 'id="site-footer"' in client.get(f"/{name}.html" if name != "home" else "/").text, name
+
+
+def test_the_website_header_always_fits():
+    """'Book an appointment' went off the page: a signed-in name made the header too wide."""
+    site = client.get("/site.js").text
+    assert 'class="avatar"' in site and "initials(" in site        # signed in: a small round button...
+    assert 'class="panel-btn" data-logout' in site                   # ...whose menu has Log out
+    css = client.get("/style.css").text
+    assert "@media (max-width: 1280px)" in css                       # the menu button takes over earlier
+    assert "header.site-header .header-actions { flex-shrink: 0; }" in css
+    assert "header.site-header .logo small { display: none; }" in css
+
+
+def test_tables_and_forms_fit_on_phones():
+    """Wide tables ran off phone screens; now each row becomes a labelled card under 640px."""
+    core = client.get("/core.js").text
+    assert "function labelTables" in core and "data-label" in core and "stack-on-phone" in core
+    assert "requestAnimationFrame(() => { tableTimer" not in core          # paused in background tabs
+    css = client.get("/style.css").text
+    assert "table.stack-on-phone tr { display: grid;" in css
+    assert "content: attr(data-label)" in css
+    assert ".enquiry-form > *, .phone-row > * { min-width: 0; }" in css   # forms shrink on 320px phones
+    assert ".tabs { flex-wrap: wrap;" in css
+
+
+def test_weekday_names_only_change_inside_dates():
+    core = client.get("/core.js").text
+    assert "DAY_IN_DATE" in core and "Sun Pharma" in core                 # a company, not Sunday

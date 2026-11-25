@@ -123,7 +123,7 @@
             <button type="button" class="btn btn-emergency" data-toggle aria-expanded="false">Emergency ${ICON.chevron}</button>
             <div class="panel" id="sh-emergency"><p class="note">Loading…</p></div>
           </div>
-          <span class="account" id="sh-account"></span>
+          <div class="account" id="sh-account"></div>
           <a class="btn btn-book" href="/book.html">Book an appointment</a>
           <button type="button" class="icon-btn hamburger" aria-label="Open menu" aria-expanded="false"
                   aria-controls="site-menu">${ICON.menu}</button>
@@ -220,13 +220,31 @@
 
   const ROLE_LABEL = { admin: "Admin", doctor: "Doctor", pharmacist: "Pharmacy", patient: "Patient" };
 
+  // Each role's own page, for the account menu
+  const MY_PAGE = { patient: "My appointments", doctor: "Doctor's desk", pharmacist: "Pharmacy", admin: "Hospital overview" };
+  // "Asha Patel" -> "AP"; "Dr. Meera Rao" -> "MR"
+  const initials = name => name.replace(/^(dr|mr|mrs|ms)\.?\s+/i, "").split(/\s+/).filter(Boolean)
+    .slice(0, 2).map(w => w[0].toUpperCase()).join("") || "?";
+
   user.then(u => {
-    const account = u
+    // In the bar: "Log in", or (signed in) a small round button with your initials that opens
+    // your name, your page and "Log out". A full name here pushed the header off the screen.
+    fill("sh-account", u
+      ? `<div class="dropdown account-dd">
+           <button type="button" class="avatar" data-toggle aria-expanded="false"
+                   aria-label="Your account: ${esc(u.full_name)}" title="${esc(u.full_name)}">${esc(initials(u.full_name))}</button>
+           <div class="panel account-panel">
+             <p class="panel-lead">${esc(u.full_name)}<small>${esc(ROLE_LABEL[u.role] || u.role)}</small></p>
+             <a href="${window.mediq.ROLE_HOME[u.role] || "/"}">${esc(MY_PAGE[u.role] || "My page")}</a>
+             <button type="button" class="panel-btn" data-logout>Log out</button>
+           </div>
+         </div>`
+      : `<a href="/login.html">Log in</a>`);
+    // In the phone menu there is room for the full text
+    fill("sh-account-menu", u
       ? `<span class="who">${esc(u.full_name)} <small>${esc(ROLE_LABEL[u.role] || u.role)}</small></span>
          <button type="button" class="link-btn" data-logout>Log out</button>`
-      : `<a href="/login.html">Log in</a>`;
-    fill("sh-account", account);
-    fill("sh-account-menu", u ? account : `<a href="/login.html">Log in</a><a href="/signup.html">Create an account</a>`);
+      : `<a href="/login.html">Log in</a><a href="/signup.html">Create an account</a>`);
 
     // Pages that need a role say so on <body>, e.g. <body data-require-roles="doctor">.
     // (The SERVER checks again on every request; this only gives people a friendly page.)

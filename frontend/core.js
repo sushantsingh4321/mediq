@@ -83,7 +83,7 @@
 
   const SKIP = "script, style, code, textarea, [translate='no'], .notranslate";   // never change text in these
   const ATTR_SKIP = "[translate='no'], .notranslate";       // a text box's placeholder IS translated, what you type is not
-  const ATTRS = ["placeholder", "aria-label", "title", "alt"];
+  const ATTRS = ["placeholder", "aria-label", "title", "alt", "data-label"];   // data-label: table cards on phones (1c)
   let dict = null;
 
   // t("Waiting") -> "प्रतीक्षा में" in Hindi mode (scripts may call it directly). Unknown text stays English.
@@ -98,8 +98,13 @@
     }
     return dated !== key && !/[A-Za-z]/.test(dated) ? dated : text;     // a date on its own
   }
+  // Weekdays only where they are part of a date or a list of days ("Thu 26 Nov", "Mon, Thu 14:00"),
+  // never inside names: "Sun Pharma" is a company, not Sunday.
+  const DAY = "Mon|Tue|Wed|Thu|Fri|Sat|Sun";
+  const DAY_IN_DATE = new RegExp(`\\b(${DAY})\\b(?=,? \\d|, (?:${DAY})\\b)`, "g");
   function localDates(s) {
-    return s.replace(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/g, d => dict.days[d])
+    if (new RegExp(`^(${DAY})$`).test(s)) return dict.days[s];                 // a weekday on its own: "Thu"
+    return s.replace(DAY_IN_DATE, d => dict.days[d])
             .replace(/(\d{1,2}) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/g, (x, n, mo) => `${n} ${dict.months[mo]}`);
   }
 
@@ -158,6 +163,39 @@
     script.onerror = reveal;
     document.head.appendChild(script);
   }
+
+  // ======================================================================
+  // 1c. TABLES ON PHONES
+  // ======================================================================
+  // A wide table doesn't fit on a phone. style.css ("TABLES ON PHONES") shows each row as a
+  // small card instead. Here we write each column's name onto its cells (data-label), so the
+  // card reads "Stock  90 tablets". Tables that scripts draw later are labelled as they appear.
+  // A table can opt out with class="no-stack".
+  function labelTables(rootNode = document) {
+    rootNode.querySelectorAll("table:not(.no-stack)").forEach(table => {
+      const heads = [...table.querySelectorAll("thead th")].map(th => th.textContent.replace(/\s+/g, " ").trim());
+      if (!heads.length) return;
+      table.classList.add("stack-on-phone");
+      table.querySelectorAll("tbody tr, tfoot tr").forEach(tr => {
+        let col = 0;
+        for (const cell of tr.children) {
+          const span = Number(cell.getAttribute("colspan") || 1);
+          if (span === 1 && heads[col] && !cell.hasAttribute("data-label")) cell.setAttribute("data-label", heads[col]);
+          if (span > 1) cell.classList.add("cell-wide");          // "Nothing yet" rows: no label, full width
+          col += span;
+        }
+      });
+    });
+  }
+  let tableTimer = null;
+  // A short timer (not requestAnimationFrame, which browsers pause in background tabs)
+  // gathers many changes into one pass.
+  const tableWatcher = new MutationObserver(() => {
+    if (tableTimer) return;
+    tableTimer = setTimeout(() => { tableTimer = null; labelTables(); }, 30);
+  });
+  const startTables = () => { labelTables(); tableWatcher.observe(document.body, { childList: true, subtree: true }); };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startTables); else startTables();
 
   // ======================================================================
   // 2. LOGIN TOKEN AND API CALLS (moved here from site.js)

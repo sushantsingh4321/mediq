@@ -376,6 +376,8 @@ window.MEDIQ_HI = {
     "Can't reach the hospital system right now.": "अभी अस्पताल के सिस्टम से जुड़ नहीं पा रहे हैं।",
     "You're still logged in. Check your internet connection and try again.": "आप अब भी लॉग इन हैं। अपना इंटरनेट कनेक्शन जाँचें और फिर कोशिश करें।",
     "Try again": "फिर कोशिश करें",
+    "Hospital overview": "अस्पताल का सारांश",
+    "My page": "मेरा पेज",
   },
 
   // Checked from top to bottom; the first that matches wins.
@@ -413,6 +415,7 @@ window.MEDIQ_HI = {
     [/^You're signed in as (.+) \((\w+)\)\. Doctors see their bookings on the Doctor's desk\.$/,
       "आप $1 ($2) के रूप में साइन इन हैं। डॉक्टर अपनी बुकिंग डॉक्टर डेस्क पर देखते हैं।"],
     [/^Got it, all (\d+)$/, "ठीक है, सभी $1"],
+    [/^Your account: (.+)$/, "आपका खाता: $1"],
 
     // Timetable
     [/^Hospital time: (\S+) (\d\d:\d\d) \((.+)\)\.$/, (t, m, d, c, z) => `अस्पताल का समय: ${t(d)} ${c} (${z})।`],

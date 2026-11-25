@@ -216,7 +216,7 @@ header.site-header { position: sticky; top: 0; z-index: 50; padding: 0;
 
 nav.site-menu { display: flex; flex-wrap: nowrap; align-items: center; gap: 2px; }
 .site-menu .dropdown > button { display: inline-flex; align-items: center; gap: 6px; min-height: var(--touch);
-                                padding: 0 10px; background: none; border: 0; border-radius: var(--radius); white-space: nowrap;
+                                padding: 0 8px; background: none; border: 0; border-radius: var(--radius); white-space: nowrap;
                                 color: var(--text); font: inherit; font-weight: 500; cursor: pointer; }
 .site-menu .dropdown > button:hover, .site-menu .dropdown.open > button { background: var(--tint); }
 .chev { transition: transform var(--t-normal) var(--ease); }
@@ -232,6 +232,16 @@ nav.site-menu { display: flex; flex-wrap: nowrap; align-items: center; gap: 2px;
 .account a { color: var(--text); text-decoration: none; padding: 10px 4px; }
 .account a:hover { color: var(--link); }
 .account .who small { color: var(--text-muted); }
+/* Signed in: a round button with your initials; it opens your name, your page and "Log out" */
+.avatar { display: inline-grid; place-items: center; width: var(--touch); height: var(--touch); min-height: 0; padding: 0;
+          border: 0; border-radius: 50%; background: var(--icon-bg, var(--tint)); color: var(--link);
+          font: inherit; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.02em; cursor: pointer; }
+.avatar:hover, .account-dd.open .avatar { background: var(--link); color: var(--on-action); }
+.account-dd .panel { left: auto; right: 0; min-width: 220px; }
+.account-panel .panel-lead small { display: block; margin-top: 2px; font-weight: 400; }
+.panel-btn { display: block; width: 100%; min-height: 0; padding: 9px 12px; border: 0; border-radius: var(--radius);
+             background: none; color: var(--error); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.panel-btn:hover, .panel-btn:focus-visible { background: var(--tint); }
 .link-btn { min-height: 0; padding: 0; background: none; border: 0; color: var(--link); font: inherit; cursor: pointer; }
 .hamburger { display: none; }
 
@@ -280,12 +290,15 @@ form.site-search { display: block; padding: 0; border: 0; background: none; }
 @keyframes pulse { 50% { opacity: 0.3; } }
 @media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
 
-@media (max-width: 1320px) { .logo small { display: none; } .header-inner { gap: 16px; } }
-@media (min-width: 1181px) {
+/* The header must always fit its column: no "Health" beside the logo here (the footer keeps it), tighter gaps */
+header.site-header .logo small { display: none; }
+header.site-header .header-inner { gap: 12px; }
+header.site-header .header-actions { flex-shrink: 0; }   /* the buttons never get squeezed off the edge */
+@media (min-width: 1281px) {
   .site-menu .dropdown:hover > .panel { display: block; }   /* big screens: menus also open on hover */
 }
 /* Smaller screens: the menu button shows the menu as a full-width sheet under the bar */
-@media (max-width: 1180px) {
+@media (max-width: 1280px) {
   .hamburger { display: inline-grid; }
   .header-actions .account { display: none; }
   nav.site-menu { display: none; position: absolute; top: 100%; left: 0; right: 0; flex-direction: column;
@@ -1221,3 +1234,44 @@ html.i18n-loading body { visibility: hidden; }      /* a moment, while the page 
               flex-wrap: wrap; gap: var(--s2) var(--s4); padding: var(--s3) var(--s4); background: var(--st-called-bg);
               color: var(--text); border-bottom: 1px solid var(--st-called); text-align: center; }
 .ui-offline p { margin: 0; }
+
+/* =====================================================================
+   TABLES ON PHONES (core.js section 1c labels the cells)
+   Each row becomes a small card: the first cell is its title, the rest
+   sit in two columns, each with its column name above the value.
+   ===================================================================== */
+@media (max-width: 640px) {
+  table.stack-on-phone, table.stack-on-phone tbody, table.stack-on-phone tfoot { display: block; width: 100%; }
+  table.stack-on-phone thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  table.stack-on-phone caption { display: block; }
+  table.stack-on-phone tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px;
+                            margin: 0 0 12px; padding: 14px 16px; background: var(--surface);
+                            border: 1px solid var(--border); border-radius: 12px; }
+  table.stack-on-phone tr > * { display: block; min-width: 0; padding: 0; border: 0; text-align: left;
+                                overflow-wrap: anywhere; white-space: normal; }
+  table.stack-on-phone tr > :first-child { grid-column: 1 / -1; font-size: var(--fs-base); font-weight: 600; }
+  table.stack-on-phone tr > .cell-wide { grid-column: 1 / -1; }
+  table.stack-on-phone [data-label]:not(:first-child)::before {
+    content: attr(data-label); display: block; margin-bottom: 2px; font-size: 0.75rem; font-weight: 600;
+    color: var(--text-muted); letter-spacing: 0; white-space: normal; }   /* long labels wrap */
+  table.stack-on-phone td:empty { display: none; }
+  table.stack-on-phone .num { text-align: left; }
+  table.stack-on-phone tr > :has(button, select, .ui-button) { grid-column: 1 / -1; }   /* actions get the full width */
+  table.stack-on-phone button, table.stack-on-phone select { max-width: 100%; }
+  /* The boxes around tables would double the cards' borders */
+  .ui-table-wrap:has(> table.stack-on-phone), .tbl-scroll { overflow: visible; background: none; border: 0; }
+  /* Dashboard: tabs wrap instead of running off the side */
+  .tabs { flex-wrap: wrap; overflow: visible; }
+}
+
+/* =====================================================================
+   SMALL PHONES: nothing may stick out of a 320px screen
+   ===================================================================== */
+.enquiry-form > *, .phone-row > * { min-width: 0; }     /* grid items may shrink below their content's width */
+.enquiry-form select, .enquiry-form input { max-width: 100%; }
+@media (max-width: 360px) {
+  .header-actions { gap: 4px; }
+  .header-actions .icon-btn { width: 40px; height: 40px; }
+  .btn-emergency { padding: 0 6px; font-size: 0.8125rem; }
+  .phone-row select { flex-basis: 96px; }
+}
