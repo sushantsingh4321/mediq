@@ -12,12 +12,13 @@
   <script src="core.js"></script>
 </head>
 <body data-appbar-role="OPD">
-  <!-- site.js draws the shared website top strip, header and menu in here -->
+  <!-- core.js draws the app bar here (hospital name, role, clock); shell.js adds the sidebar -->
   <header id="app-bar"></header>
 
-  <!-- The OPD system's own title and tab bar (unchanged) -->
+  <!-- The OPD screens' tab bar. The page's main heading is for screen readers only:
+       the hospital name is already in the app bar above. -->
   <header>
-    <h1>mediQ <small id="hospital-name"></small></h1>
+    <h1 class="ui-sr-only">OPD: doctor's desk, waiting room, dashboard and beds</h1>
     <!-- Each button shows one "screen". app.js handles the switching. -->
     <nav class="app-tabs">
       <button data-screen="doctor" class="active">Doctor</button>

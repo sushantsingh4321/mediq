@@ -423,9 +423,7 @@ function openScreenFromHash() {
 window.addEventListener("hashchange", openScreenFromHash); // menu clicked while already on this page
 
 async function start() {
-  const h = await api("/hospital/summary");
-  document.getElementById("hospital-name").textContent = h.hospital_name;
-  await loadDepartments();
+  await loadDepartments();         // (the hospital name is shown by the app bar, core.js)
   openScreenFromHash();
   refresh();
   // Poll every 5 seconds so screens stay up to date. (Later: WebSockets.)
