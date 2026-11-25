@@ -34,6 +34,8 @@ staff run the queue, beds, ambulances, the pharmacy and the schedule.
   no realistic phone numbers or postcodes).
 
 **Brand commitments (pinned by the owner)**
-- The home hero is the GradientASCII "horizon" (frontend/gradient-ascii.js) with its palette:
-  `#1e3fd8`, `#f6f8ff`, `#a5d8ff`, `#38bdf8`, on a night-navy ground.
+- The home page must feel like a **hospital**: light and clinical (white and soft blue), real
+  photographs of care, the 24×7 emergency numbers in view, departments with medical icons.
+  (The earlier dark GradientASCII hero was removed at the owner's request, Nov 2026.)
+- Photos are freely licensed and show **no brand names, logos or signs**; authors are credited in the footer.
 - Minimal: fewer, larger things; one idea per screen on the website.

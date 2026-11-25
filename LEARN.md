@@ -2158,3 +2158,19 @@ fail while things wake up, so patients seemed to be logged out at random.
 
 **Lesson:** "it failed" and "you're not allowed" are different answers. Only log someone out
 when the server *says* their login is no longer valid.
+
+## Part 26. A home page that looks like a hospital
+
+The dark "ASCII horizon" hero looked like a tech product, not a hospital. The home page is now:
+- **Bright and clinical:** soft blue and white, a real photo of a doctor examining a child.
+- **Emergency first:** a light red strip with 108 and 112 (tap to call on a phone: `href="tel:108"`).
+- **Quick links** to what people come for: book, timetable, medicines, beds, call back.
+- **Speciality cards** with medical icons (heart, brain, bone...), drawn as SVG in `home.js`.
+- **Facts counted from the data** ("7 hospitals in 5 states"), never typed in by hand.
+
+**Photos.** Three CC BY 2.0 photos by Shixart1985 (Wikimedia Commons). Each was checked at full
+size for brand names: one showed a medical device's maker name and labelled boxes, so it was
+**cropped** to leave them out. CC BY means: free to use, but the author must be credited (footer).
+
+**A CSS gotcha.** `<img width="1000" height="1500">` also sets a height on the page. To let CSS
+choose the shape with `aspect-ratio`, add `height: auto`.

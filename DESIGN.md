@@ -5,10 +5,11 @@ The visual rules every page follows. The tokens live at the top of `frontend/sty
 Guidance followed: impeccable (pbakaus/impeccable) and tasteskill (Leonxlnx/taste-skill),
 applied by hand (their bundled scripts are not run in this project).
 
-## The world: "night sky over a clear horizon"
+## The world: "a bright, calm hospital"
 
-Taken from the home hero the owner chose (a horizon of text characters glowing from cobalt
-to ice on night navy). Calm, precise, clinical without being sterile.
+Light and clinical: white and soft blue grounds, cobalt for actions, real photographs of
+doctors with patients, emergency numbers always in view. Navy (`--night`, `--ink`) is kept for
+the app bar, the sidebar, the footer and the one "live across the network" band.
 
 | Token | Light | Dark | Job |
 |---|---|---|---|
@@ -27,12 +28,12 @@ to ice on night navy). Calm, precise, clinical without being sterile.
 | `--focus` | `#ffd60a` + dark inner ring | same | keyboard focus, always visible |
 
 **Colour strategy.** Restrained on working screens (tinted neutrals + cobalt doing real jobs:
-the main action, selection, links, "in consultation"). Committed on the home page: night navy
-and the horizon own the first screen.
+the main action, selection, links, "in consultation"). The home page is bright: a soft blue hero
+(`--hero-bg`), white cards, a light red emergency strip (`--er-bg`), icons on pale blue (`--icon-bg`).
 
 **Light or dark.** Patients read on phones in daylight and bright waiting rooms; staff work in
 bright clinical rooms: **light by default**, dark when the device asks (toggle in the app bar).
-The hero and the waiting-room board are dark in both.
+The waiting-room board is dark in both.
 
 ## Type
 
@@ -48,8 +49,8 @@ The hero and the waiting-room board are dark in both.
   app frame (sidebar and app bar). Spacing on a 4px grid, more space above a heading than below it.
 - One shadow (`--shadow-pop`), only for things that float (menus, toasts). Everything else is
   border + surface.
-- Motion 150-250ms, `cubic-bezier(.2,.7,.2,1)`. The hero's horizon is the page's one authored
-  moment. "Reduce motion" turns all motion off.
+- Motion 150-250ms, `cubic-bezier(.2,.7,.2,1)`. "Reduce motion" turns all motion off.
+- Home page cards and photos use softer corners (14-24px) than working screens (6px).
 
 ## Bans (each checked by tests/test_design_system.py where it can be)
 
@@ -59,7 +60,7 @@ The hero and the waiting-room board are dark in both.
 - No gradient text, no decorative glass/blur, no hard offset shadows.
 - No unicode or emoji standing in for icons: drawn SVG icons, one stroke weight.
 - No invented numbers presented as real (the hero shows the live queue).
-- No same-size icon-card grids as page structure on the website.
+- Icon cards only where people choose between equals (specialities, quick links), never as filler.
 - No violet or lavender.
 
 ## The app frame (signed-in pages)
