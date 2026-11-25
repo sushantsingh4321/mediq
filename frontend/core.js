@@ -184,12 +184,17 @@
   // Call the backend and return JSON. Sends the login token automatically.
   // A 401 ("not logged in / expired") forgets the token and goes to the login
   // page, unless the caller passes { quiet401: true }.
+  // The ONE place that talks to the server: everything goes to "/api/..." on this same site.
+  function request(path, options = {}) {
+    return fetch("/api" + path, {
+      headers: { "Content-Type": "application/json", ...authHeader() },
+      ...options,
+    });
+  }
+
   async function api(path, options = {}) {
     const { quiet401, ...fetchOptions } = options;
-    const res = await fetch("/api" + path, {
-      headers: { "Content-Type": "application/json", ...authHeader() },
-      ...fetchOptions,
-    });
+    const res = await request(path, fetchOptions);
     const data = await res.json().catch(() => ({}));
     if (res.status === 401 && !quiet401 && !path.startsWith("/auth/login") && !path.startsWith("/auth/signup")) {
       clearToken();
@@ -211,14 +216,48 @@
   }
 
   // The logged-in user ({full_name, role, ...}) as a Promise, or null when logged out.
-  const user = getToken()
-    ? api("/auth/me", { quiet401: true }).catch(() => { clearToken(); return null; })
-    : Promise.resolve(null);
+  //
+  // ONLY a real "401: not logged in / expired" from the server forgets the login.
+  // Anything else (the server waking up after a quiet spell, a weak phone signal,
+  // a server error) is tried again 3 times. If it still fails we KEEP the login and
+  // show "Can't reach the hospital system" with a Try again button. (Before this,
+  // any hiccup here threw the login away, so people seemed to be logged out at random.)
+  let serverUnreachable = false;
+  async function whoAmI() {
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const res = await request("/auth/me").catch(() => null);         // null = no answer at all
+      if (res && res.ok) return res.json();
+      if (res && res.status === 401) { clearToken(); return null; }     // really logged out / expired
+      await new Promise(r => setTimeout(r, 700 * attempt));            // wait a moment, then try again
+    }
+    serverUnreachable = true;
+    showUnreachable();
+    return null;
+  }
+  const user = getToken() ? whoAmI() : Promise.resolve(null);
 
-  // "ok" | "login" (nobody logged in) | "forbidden" (wrong role). Admins may do everything.
+  function showUnreachable() {
+    const draw = () => {
+      if (document.getElementById("ui-offline")) return;
+      const box = document.createElement("div");
+      box.id = "ui-offline";
+      box.className = "ui-offline";
+      box.setAttribute("role", "alert");
+      box.innerHTML = `<p><strong>Can't reach the hospital system right now.</strong>
+        You're still logged in. Check your internet connection and try again.</p>
+        <button type="button" class="ui-button ui-button--secondary">Try again</button>`;
+      box.querySelector("button").addEventListener("click", () => location.reload());
+      document.body.prepend(box);
+    };
+    if (document.body) draw(); else document.addEventListener("DOMContentLoaded", draw);
+  }
+
+  // "ok" | "login" (nobody logged in) | "forbidden" (wrong role) | "offline" (still logged in,
+  // but the server couldn't be reached: pages stop quietly, the banner above explains).
+  // Admins may do everything.
   function checkAccess(u, roles) {
     if (!roles || roles.length === 0) return "ok";
-    if (!u) return "login";
+    if (!u) return serverUnreachable ? "offline" : "login";
     return u.role === "admin" || roles.includes(u.role) ? "ok" : "forbidden";
   }
 

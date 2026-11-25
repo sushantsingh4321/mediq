@@ -351,6 +351,9 @@ window.MEDIQ_HI = {
     "Check-in closed 15 minutes after your appointment time. Please speak to the doctor's assistant or book again.":
       "चेक-इन अपॉइंटमेंट के समय से 15 मिनट बाद बंद हो गया। कृपया डॉक्टर के सहायक से बात करें या फिर से बुक करें।",
     "Your session has expired. Please log in again.": "आपका सत्र खत्म हो गया है। कृपया फिर से लॉग इन करें।",
+    "Can't reach the hospital system right now.": "अभी अस्पताल के सिस्टम से जुड़ नहीं पा रहे हैं।",
+    "You're still logged in. Check your internet connection and try again.": "आप अब भी लॉग इन हैं। अपना इंटरनेट कनेक्शन जाँचें और फिर कोशिश करें।",
+    "Try again": "फिर कोशिश करें",
   },
 
   // Checked from top to bottom; the first that matches wins.

@@ -10,6 +10,7 @@
   const access = m.checkAccess(u, ["doctor"]);
   if (access !== "ok") {
     if (access === "login") return m.goToLogin();
+    if (access === "offline") return;                       // still logged in; core.js shows "Can't reach..."
     document.querySelector("main").innerHTML = `<div id="locked"></div>`;
     return m.message($("locked"), { type: "error", title: "Doctors only",
       text: `This page lists a doctor's own bookings. You're signed in as ${u.full_name} (${u.role}).` });

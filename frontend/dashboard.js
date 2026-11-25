@@ -359,6 +359,7 @@
   m.user.then(u => {
     const access = m.checkAccess(u, ["admin"]);
     if (access === "login") return m.goToLogin();
+    if (access === "offline") return;                       // still logged in; core.js shows "Can't reach..."
     if (access === "forbidden") {
       $("main").innerHTML = `<h1>No access</h1><p class="ui-lead">The hospital overview is for admin accounts.</p>`;
       return;

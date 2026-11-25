@@ -1166,3 +1166,9 @@ html.i18n-loading body { visibility: hidden; }      /* a moment, while the page 
   .menu-lang .theme-btn { display: inline-grid; }
   .logo { font-size: 1.15rem; }
 }
+
+/* "Can't reach the hospital system" (core.js): shown instead of logging people out */
+.ui-offline { position: sticky; top: 0; z-index: 95; display: flex; align-items: center; justify-content: center;
+              flex-wrap: wrap; gap: var(--s2) var(--s4); padding: var(--s3) var(--s4); background: var(--st-called-bg);
+              color: var(--text); border-bottom: 1px solid var(--st-called); text-align: center; }
+.ui-offline p { margin: 0; }

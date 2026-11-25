@@ -84,6 +84,7 @@
     if (document.getElementById("ph-alert-badge")) refreshBadge();
 
     const access = m.checkAccess(u, roles);
+    if (access === "offline") return { u, allowed: false };   // still logged in; core.js shows "Can't reach..."
     if (access !== "ok") {
       const main = document.querySelector("main");
       const who = roles.map(r => (r === "pharmacist" ? "pharmacist" : r)).join(" or ");

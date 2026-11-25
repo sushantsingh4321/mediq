@@ -233,6 +233,7 @@
     const needed = (document.body.dataset.requireRoles || "").split(",").filter(Boolean);
     const access = checkAccess(u, needed);
     if (access === "login") goToLogin();
+    if (access === "offline") return;                       // still logged in; core.js shows "Can't reach..."
     if (access === "forbidden") {
       const main = document.querySelector("main");
       if (main) main.innerHTML = `

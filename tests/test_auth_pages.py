@@ -36,3 +36,17 @@ def test_scripts_send_the_login_token():
 
 def test_staff_page_declares_the_role_it_needs():
     assert 'data-require-roles="admin"' in client.get("/staff-callbacks.html").text
+
+
+def test_a_server_hiccup_never_logs_people_out():
+    """Only a real 401 forgets the login. Slow or failed checks are retried, and if the server
+    still can't be reached the login is KEPT and a "Can't reach" banner is shown instead."""
+    core = client.get("/core.js").text
+    assert ".catch(() => { clearToken(); return null; })" not in core     # the old bug
+    assert "async function whoAmI()" in core
+    assert "res.status === 401) { clearToken(); return null; }" in core   # the one case that logs out
+    assert "attempt <= 3" in core                                        # retries
+    assert "Can't reach the hospital system right now." in core and '"offline"' in core
+    # Every page that checks access stops quietly when offline instead of treating it as logged out
+    for script in ["patient.js", "doctor-appointments.js", "pharmacy.js", "site.js", "dashboard.js"]:
+        assert 'access === "offline"' in client.get(f"/{script}").text, script

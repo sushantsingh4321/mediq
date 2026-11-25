@@ -30,6 +30,7 @@
       return { u, allowed: true };
     }
 
+    if (access === "offline") return { u, allowed: false };       // still logged in; core.js shows "Can't reach..."
     const main = document.querySelector("main");
     const here = encodeURIComponent(location.pathname);
     main.innerHTML = `<h1>${access === "login" ? "Log in to book" : "This page is for patients"}</h1><div id="pt-locked"></div>`;

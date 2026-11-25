@@ -2141,3 +2141,20 @@ line to `phrases` in lang-hi.js. Have a native speaker check the medical words b
 
 **Not yet in Hindi:** the staff pages (doctor's desk, pharmacy, admin, dashboard). They will
 show English for words the dictionary doesn't have yet.
+
+## Part 25. Bug fix: "I keep getting logged out"
+
+**What happened.** Every page asks the server "who is logged in?" (`GET /api/auth/me`). If that
+request failed for ANY reason, `core.js` deleted the login, even when the server was only slow
+or briefly unreachable. On Vercel + Neon's free plan the first request after a quiet spell can
+fail while things wake up, so patients seemed to be logged out at random.
+
+**The fix (core.js, `whoAmI`).**
+- Only a real **401** ("not logged in / expired") deletes the login.
+- Any other failure is **retried 3 times**, waiting a little longer each time.
+- If the server still can't be reached, the login is **kept** and a banner says
+  "Can't reach the hospital system right now" with a **Try again** button.
+  `checkAccess()` returns a new answer, `"offline"`, so pages stop quietly.
+
+**Lesson:** "it failed" and "you're not allowed" are different answers. Only log someone out
+when the server *says* their login is no longer valid.
