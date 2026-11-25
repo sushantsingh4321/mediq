@@ -102,3 +102,34 @@ def test_account_times_say_they_are_utc():
     # So the browser converts them to local time correctly (no 5.5-hour shift)
     created = client.get("/api/auth/users", headers=ADMIN).json()[0]["created_at"]
     assert created.endswith("Z") or created.endswith("+00:00")
+
+
+# ---------- activity (the dashboard charts) ----------
+
+def test_activity_is_admin_only():
+    _, doctor = make_account("doc2@console.example", "doctor")
+    assert client.get("/api/admin/activity").status_code == 401
+    assert client.get("/api/admin/activity", headers=doctor).status_code == 403
+    assert client.get("/api/admin/activity", headers=ADMIN).status_code == 200
+
+
+def test_activity_counts_real_arrivals_and_waits():
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    from backend.app.config import get_settings
+    from backend.app.store import store
+
+    before = client.get("/api/admin/activity", headers=ADMIN).json()
+    hour = datetime.now(ZoneInfo(get_settings().hospital_timezone)).hour   # the hospital's hour now
+
+    token = queue_token("Charted", 2)
+    store.call_next(2, 98, datetime.now())          # a doctor calls them in (room 98: unused by other tests)
+
+    after = client.get("/api/admin/activity", headers=ADMIN).json()
+    assert len(after["arrivals_by_hour"]) == 24
+    assert after["arrivals_by_hour"][hour]["arrivals"] == before["arrivals_by_hour"][hour]["arrivals"] + 1
+    dept = {d["department"]: d for d in after["waits_today"]}[store.departments[2].name]
+    old = {d["department"]: d for d in before["waits_today"]}[store.departments[2].name]
+    assert dept["seen"] >= old["seen"] + 1 and dept["avg_wait_minutes"] is not None
+    assert len(after["bookings_next_7_days"]) == 7
+    assert "Charted" not in str(after) and token["number"] not in str(after)   # counts only, never names

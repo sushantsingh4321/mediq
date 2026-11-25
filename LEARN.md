@@ -2067,3 +2067,41 @@ Also good to know: `vercel dev` reads your **`.env`**, and an empty
   "pharmacy" in style.css, so it became `.ps-` ("phone screen").
 - *Tests guard old promises.* `test_frontend_urls` refused a full web address in `home.js`
   (it stops a server address being hard-coded), so the photo credit is plain text.
+
+## Part 21. A floating sidebar, and light/dark on every page
+
+**What changed**
+- **`frontend/shell.js`** draws a sidebar on the 12 signed-in pages (patient, doctor, pharmacy,
+  admin). It lists only the pages *your role* can open. The **Collapse** button folds it to icons
+  and remembers your choice in `localStorage` (the browser's small notebook). On a phone it hides,
+  and the menu button in the app bar slides it in as a *drawer*.
+- Admin, the doctor's desk, Ambulance and Call-backs used the **website** header; they now use the
+  **app bar** like the other staff pages, so every staff page looks the same.
+- The website header has a **moon/sun button**, so light/dark now works on every page.
+
+**Ideas worth remembering**
+- *Hiding a link is not security.* The sidebar only hides pages you can't use; the server still
+  checks your role on every request.
+- *Old global styles can surprise you.* An early rule `nav { display: flex }` laid the sidebar's
+  groups side by side. The fix was one line: `.sb-nav { display: block }`.
+- *Off-screen menus must leave the Tab order.* A closed drawer gets `visibility: hidden`, so
+  keyboard users don't tab into links they can't see.
+
+## Part 22. The hospital overview: KPI cards and charts
+
+**What changed**
+- **`GET /api/admin/activity`** (admin only, in `routers/admin.py`) returns three real lists:
+  arrivals per hour today, the actual average wait per department today (arrival → called),
+  and bookings for the next 7 days. Counts only, never names.
+- **`/dashboard.html`** shows six KPI cards (waiting, average wait, beds, doctors in, ambulances,
+  stock alerts) and six charts. Admins now land here after logging in; it's also in the sidebar.
+
+**Ideas worth remembering**
+- *Time zones.* The server saves times on its own clock (UTC on Vercel), but "10:00" must mean
+  10:00 in the hospital. `.astimezone(ZoneInfo("Asia/Kolkata"))` converts before we count by hour.
+- *Choose the chart by the question.* "How many each hour?" is columns. "How is one whole split?"
+  is a segmented bar. "How full is each ward?" is a meter per row. No pie charts.
+- *Check colours with a tool, not your eyes.* Red next to green looks fine to most people but is
+  the same colour to about 1 in 12 men, so the call-back bar orders them green, blue, amber, red.
+- *Charts need words too.* Each chart has a table version and keyboard-reachable tooltips, and a
+  warning colour always comes with an icon and a word ("Full", "Expired").

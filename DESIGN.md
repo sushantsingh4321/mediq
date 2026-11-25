@@ -44,7 +44,8 @@ The hero and the waiting-room board are dark in both.
 
 ## Shape, space, depth, motion
 
-- Radius 6px everywhere. Spacing on a 4px grid, more space above a heading than below it.
+- Radius 6px for controls and cards; 12px (`--radius-lg`) only for the two floating pieces of the
+  app frame (sidebar and app bar). Spacing on a 4px grid, more space above a heading than below it.
 - One shadow (`--shadow-pop`), only for things that float (menus, toasts). Everything else is
   border + surface.
 - Motion 150-250ms, `cubic-bezier(.2,.7,.2,1)`. The hero's horizon is the page's one authored
@@ -60,6 +61,23 @@ The hero and the waiting-room board are dark in both.
 - No invented numbers presented as real (the hero shows the live queue).
 - No same-size icon-card grids as page structure on the website.
 - No violet or lavender.
+
+## The app frame (signed-in pages)
+
+- **Floating sidebar** (`frontend/shell.js`): navy like the app bar, 12px in from the edges. Groups:
+  My care, Doctor, Hospital, Pharmacy, Admin, showing only what your role can open. Folds to icons
+  (names become tooltips); the choice is remembered. Below 900px it is a drawer behind the app
+  bar's menu button (Esc or the backdrop closes it).
+- **Light/dark switch on every page**: in the app bar on app pages, beside search in the website header.
+
+## Charts (dashboard.html)
+
+- Plain SVG/HTML drawn by `dashboard.js`, no chart library. Real numbers only.
+- One hue (cobalt) for magnitude; the current hour / today is the solid bar, the rest a lighter step.
+- Parts of a whole use **green, cobalt, amber, red** in that order (red never touches green),
+  checked for colour-blind readers in light and dark (`--c-*` tokens; dark has its own steps).
+- Status (amber = needs attention, red = critical) always comes with an icon and a word.
+- Every axis chart has "Show as a table"; every bar has a hover/focus tooltip.
 
 ## Components
 

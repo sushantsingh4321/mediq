@@ -130,7 +130,7 @@
 
   // Where each role lands after logging in.
   const ROLE_HOME = {
-    admin: "/admin.html",
+    admin: "/dashboard.html",   // the hospital overview (KPIs and charts)
     doctor: "/index.html#doctor",
     pharmacist: "/pharmacy-dispense.html",
     patient: "/my-appointments.html",
@@ -212,6 +212,8 @@
     try { lang = localStorage.getItem(LANG_KEY) || "en"; } catch { /* ignore */ }
 
     bar.innerHTML = `
+      <button type="button" class="ui-barbutton ui-appbar__menu" data-sidebar-open aria-controls="sidebar"
+              aria-label="Open menu">${svg('<path d="M2 4h12M2 8h12M2 12h12"/>', 20)}</button>
       <a class="ui-appbar__hospital" href="/">${svg(ICONS.logo, 24)}<span id="ab-hospital">mediQ</span></a>
       <span class="ui-appbar__role" id="ab-role">${esc([role, place].filter(Boolean).join(", "))}</span>
       <span class="ui-appbar__spacer"></span>
