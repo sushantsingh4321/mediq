@@ -59,7 +59,7 @@
       { label: "Medicines", href: "/pharmacy.html", icon: "pill", roles: null, public: true },
       { label: "Dispense", href: "/pharmacy-dispense.html", icon: "bag", roles: ["pharmacist"] },
       { label: "Stock", href: "/pharmacy-stock.html", icon: "box", roles: ["pharmacist"] },
-      { label: "Alerts", href: "/pharmacy-alerts.html", icon: "alert", roles: ["pharmacist", "doctor"] },
+      { label: "Alerts", href: "/pharmacy-alerts.html", icon: "alert", roles: ["pharmacist", "doctor"], badge: true },
       { label: "Suppliers", href: "/pharmacy-suppliers.html", icon: "truck", roles: ["pharmacist"] },
     ] },
     { title: "Admin", items: [
@@ -111,13 +111,30 @@
       return `<div class="sb-group">
         <p class="sb-title">${m.esc(g.title)}</p>
         ${items.map(it => `<a class="sb-link" href="${it.href}" data-label="${m.esc(it.label)}">
-          ${m.svg(I[it.icon], 18)}<span class="sb-label">${m.esc(it.label)}</span></a>`).join("")}
+          ${m.svg(I[it.icon], 18)}<span class="sb-label">${m.esc(it.label)}</span>
+          ${it.badge ? '<span class="sb-badge" id="sb-alert-badge" hidden></span>' : ""}</a>`).join("")}
       </div>`;
     }).join("") + (u ? "" : `<div class="sb-group"><a class="sb-link" href="/login.html" data-label="Log in">
       ${m.svg(I.login, 18)}<span class="sb-label">Log in</span></a></div>`);
     markCurrent();
     labelForFolded();
+    refreshAlerts();
   }
+
+  // Red number on "Alerts": low stock + expiring in 30 days + expired (pharmacy pages call this again after a change)
+  async function refreshAlerts() {
+    const badge = document.getElementById("sb-alert-badge");
+    if (!badge) return;
+    try {
+      const { counts } = await m.api("/pharmacy/alerts");
+      const n = counts.low_stock + counts.expiring_30 + counts.expired;
+      badge.textContent = n;
+      badge.hidden = n === 0;
+      badge.closest(".sb-link").setAttribute("aria-label", `Alerts, ${n} need action`);
+      badge.closest(".sb-link").dataset.label = `Alerts (${n})`;
+    } catch { /* the count is optional */ }
+  }
+  window.mediqSidebar = { refreshAlerts };
 
   // Highlight the page you are on. /index.html has screens: no hash means the doctor's desk.
   function markCurrent(screen) {

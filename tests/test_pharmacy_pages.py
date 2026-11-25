@@ -26,7 +26,8 @@ def test_every_pharmacy_page_is_served_with_its_scripts():
         # core.js in <head> (theme before the page is drawn), then the shared pharmacy helpers
         assert '<script src="core.js"></script>' in html.text, page
         assert html.text.index('src="pharmacy.js"') < html.text.index(f'src="{script}"'), page
-        assert 'id="app-bar"' in html.text and 'id="ph-nav"' in html.text, page
+        assert 'id="app-bar"' in html.text and 'src="shell.js"' in html.text, page   # menu = the sidebar
+        assert 'id="ph-nav"' not in html.text, page                                 # no second menu
         assert client.get(f"/{script}").status_code == 200, script
 
 

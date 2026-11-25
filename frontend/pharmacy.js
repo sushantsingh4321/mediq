@@ -14,15 +14,6 @@
   const m = window.mediq;
   const { esc, svg } = m;
 
-  // The pharmacy sub-menu. roles: who sees the link (null = everyone).
-  const PAGES = [
-    { href: "/pharmacy.html", label: "Catalogue", roles: null },
-    { href: "/pharmacy-dispense.html", label: "Dispense", roles: ["pharmacist"] },
-    { href: "/pharmacy-stock.html", label: "Stock", roles: ["pharmacist"] },
-    { href: "/pharmacy-alerts.html", label: "Alerts", roles: ["pharmacist", "doctor"], badge: true },
-    { href: "/pharmacy-suppliers.html", label: "Suppliers", roles: ["pharmacist"] },
-  ];
-
   // Small line drawings (16×16, in the text colour) for the pills
   const ICON = {
     rx: '<path d="M4 1.5h5.5L12 4v10.5H4z"/><path d="M6 7h4M6 9.5h4"/>',          // a prescription sheet
@@ -73,15 +64,7 @@
     m.appBar({ role: "Pharmacy", place: "Main counter" });
     const u = await m.user;
 
-    const nav = document.getElementById("ph-nav");
-    const here = location.pathname;
-    nav.innerHTML = PAGES.filter(p => m.checkAccess(u, p.roles) === "ok").map(p => `
-      <a href="${p.href}" ${p.href === here ? 'aria-current="page"' : ""}>${esc(p.label)}
-        ${p.badge ? '<span class="ph-badge" id="ph-alert-badge" hidden></span>' : ""}</a>`).join("");
-    nav.setAttribute("aria-label", "Pharmacy");
-
-    // Red number on "Alerts": low stock + expiring in 30 days + expired
-    if (document.getElementById("ph-alert-badge")) refreshBadge();
+    // The pharmacy pages are in the sidebar (shell.js), which also shows the red count on Alerts.
 
     const access = m.checkAccess(u, roles);
     if (access === "offline") return { u, allowed: false };   // still logged in; core.js shows "Can't reach..."
@@ -105,17 +88,8 @@
     return { u, allowed: true };
   }
 
-  async function refreshBadge() {
-    const badge = document.getElementById("ph-alert-badge");
-    if (!badge) return;
-    try {
-      const { counts } = await m.api("/pharmacy/alerts");
-      const n = counts.low_stock + counts.expiring_30 + counts.expired;
-      badge.textContent = n;
-      badge.hidden = n === 0;
-      badge.setAttribute("aria-label", `${n} urgent`);
-    } catch { /* the badge is optional */ }
-  }
+  // After dispensing, receiving stock or writing off a batch: update the sidebar's red count
+  const refreshBadge = () => window.mediqSidebar?.refreshAlerts();
 
   // ---------------------------------------------------------------- medicine search box
   // Uses a <datalist>: the browser shows suggestions under the box and they
