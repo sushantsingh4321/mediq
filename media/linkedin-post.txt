@@ -1,0 +1,7 @@
+Hospital waiting rooms cost patients hours. I built mediQ to fix that.
+
+Patients see the live wait in every department, book a doctor in about a minute, tap "I've arrived" at the hospital, and their phone tells them when it's their turn and which room to go to. Behind it: a live doctor's desk, a waiting-room screen, wait-time forecasts, beds and ambulance dispatch, a pharmacy counter that dispenses first-to-expire stock and prints the bill, and a live overview for admins. English and हिन्दी, light and dark, on any screen.
+
+Try it: https://mediq-alpha.vercel.app
+
+(All patients in the video are fictional. Voice: Kokoro, open source. Music: Sascha Ende, ende.app, CC BY 4.0.)
