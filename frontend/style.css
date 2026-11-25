@@ -985,7 +985,6 @@ body.has-sidebar { padding: 0 var(--sb-gap) 0 calc(var(--sb-w) + var(--sb-gap) *
 body.has-sidebar.sb-folded { padding-left: calc(var(--sb-w-folded) + var(--sb-gap) * 2); }
 body.has-sidebar .ui-appbar { margin-top: var(--sb-gap); border-radius: var(--radius-lg); border-bottom: 0; }
 body.has-sidebar .ui-appbar__hospital svg { display: none; }  /* the logo is already in the sidebar */
-body.has-sidebar .site-footer { margin-top: 48px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
 .ui-appbar__menu { display: none; }
 .sb-backdrop { display: none; }
 

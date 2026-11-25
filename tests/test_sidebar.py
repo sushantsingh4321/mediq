@@ -59,3 +59,11 @@ def test_dashboard_page_has_kpis_charts_and_tables():
     assert ".g12" in css and "repeat(12, minmax(0, 1fr))" in css         # the 12-column grid
     assert ':root[data-theme="dark"] {\n  --c-neutral' in css             # its own dark colours
     assert ".dash-tbl .num { text-align: right" in css                     # numbers right-aligned
+
+
+def test_staff_pages_have_no_website_footer():
+    # Staff tools end with their content; the public website keeps its footer
+    for name in ["admin", "ambulance", "index", "staff-callbacks"]:
+        assert 'id="site-footer"' not in client.get(f"/{name}.html").text, name
+    for name in WEBSITE_PAGES:
+        assert 'id="site-footer"' in client.get(f"/{name}.html" if name != "home" else "/").text, name
