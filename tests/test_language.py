@@ -53,3 +53,10 @@ def test_patient_pages_main_words_have_hindi():
 def test_dictionary_has_devanagari_and_no_empty_entries():
     assert re.search(r"[ऀ-ॿ]", DICT)
     assert '": ""' not in DICT
+
+
+def test_light_is_the_default_and_dark_only_by_choice():
+    core = client.get("/core.js").text
+    assert 'applyTheme(savedTheme() === "dark" ? "dark" : "light")' in core
+    assert "prefers-color-scheme" not in core                    # the device's dark setting is not followed
+    assert "prefers-color-scheme" not in client.get("/site.js").text

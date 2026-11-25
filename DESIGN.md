@@ -40,7 +40,8 @@ the main action, selection, links, "in consultation"). The home page is bright: 
 (`--hero-bg`), white cards, a light red emergency strip (`--er-bg`), icons on pale blue (`--icon-bg`).
 
 **Light or dark.** Patients read on phones in daylight and bright waiting rooms; staff work in
-bright clinical rooms: **light by default**, dark when the device asks (toggle in the app bar).
+bright clinical rooms: **always light by default**; dark only when the person presses the
+moon button (remembered on that device). The device's own dark setting is not followed.
 The waiting-room board is dark in both.
 
 ## Type

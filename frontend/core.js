@@ -19,19 +19,18 @@
   // ======================================================================
   // 1. THEME (light / dark)
   // ======================================================================
-  // The choice is saved in localStorage. With no saved choice we follow the
-  // computer's setting (prefers-color-scheme), and keep following it if it changes.
+  // LIGHT is the default for everyone, whatever the phone or computer is set to.
+  // Dark mode only comes on when someone presses the moon button, and that choice is
+  // saved in localStorage so it stays on (until they press the sun button again).
   const THEME_KEY = "mediq_theme";
   const root = document.documentElement;
-  const systemDark = window.matchMedia("(prefers-color-scheme: dark)");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   function savedTheme() { try { return localStorage.getItem(THEME_KEY); } catch { return null; } }
   function getTheme() { return root.dataset.theme === "dark" ? "dark" : "light"; }
   function applyTheme(theme) { root.dataset.theme = theme; }
 
-  applyTheme(savedTheme() || (systemDark.matches ? "dark" : "light"));   // runs immediately, before paint
-  systemDark.addEventListener("change", e => { if (!savedTheme()) applyTheme(e.matches ? "dark" : "light"); });
+  applyTheme(savedTheme() === "dark" ? "dark" : "light");   // runs immediately, before the page is drawn
 
   // Switch theme. The new theme grows as a circle from the button that was clicked
   // (View Transitions API). Older browsers get a 0.35s colour fade; people who
@@ -425,7 +424,6 @@
     drawThemeButton();
     themeBtn.addEventListener("click", () => toggleTheme(themeBtn));
     document.addEventListener("mediq:theme", drawThemeButton);
-    systemDark.addEventListener("change", drawThemeButton);
 
     // Signed-in user + sign out
     user.then(u => {

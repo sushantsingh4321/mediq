@@ -29,7 +29,7 @@ staff run the queue, beds, ambulances, the pharmacy and the schedule.
 - Live numbers are real (wait times, waiting counts, beds, doctors on duty), never invented.
 - English and Hindi (हिन्दी) must both render: every face needs a Devanagari partner.
 - Works on a 360px phone, at 200% zoom, and with the keyboard alone.
-- Light and dark mode, defaulting to the device setting.
+- Light mode by default for everyone; dark mode only when the person chooses it with the theme button.
 - Demo content is fictional: phone numbers and addresses are clearly fake (`.example` emails,
   no realistic phone numbers or postcodes).
 

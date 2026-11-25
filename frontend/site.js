@@ -292,7 +292,6 @@
   drawThemeButton();
   themeBtns.forEach(b => b.addEventListener("click", () => window.mediq.toggleTheme(b)));
   document.addEventListener("mediq:theme", drawThemeButton);
-  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawThemeButton);
 
   // ---------------------------------------------------------- 3. dropdowns and hamburger
 
