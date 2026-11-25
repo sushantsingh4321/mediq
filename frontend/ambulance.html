@@ -12,8 +12,8 @@
   <script src="core.js"></script>
 </head>
 <!-- Module 3. Staff only (doctor, admin). Backend: routers/ambulance.py -->
-<body data-require-roles="doctor">
-  <div id="site-header"></div>
+<body data-require-roles="doctor" data-appbar-role="Ambulance dispatch">
+  <header id="app-bar"></header>
 
   <main class="wide">
     <h1 class="page-title">Ambulance dispatch</h1>
@@ -74,6 +74,7 @@
   </main>
 
   <div id="site-footer"></div>
+  <script src="shell.js"></script>   <!-- the floating sidebar -->
   <script src="site.js"></script>
   <script src="ambulance.js"></script>
 </body>

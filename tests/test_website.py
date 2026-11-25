@@ -59,9 +59,9 @@ def test_pages_are_served():
     assert home.status_code == 200
     assert 'id="site-header"' in home.text and 'id="enquiry-form"' in home.text
 
-    # The OPD system still works at /index.html, now with the shared header
+    # The OPD system still works at /index.html, now with the app bar and the sidebar
     opd = client.get("/index.html")
-    assert 'id="doctor-form"' in opd.text and 'id="site-header"' in opd.text
+    assert 'id="doctor-form"' in opd.text and 'id="app-bar"' in opd.text and 'src="shell.js"' in opd.text
 
     for asset in ("/site.js", "/home.js", "/app.js", "/style.css"):
         assert client.get(asset).status_code == 200

@@ -34,6 +34,7 @@
     { name: "Pharmacy: medicine catalogue", href: "/pharmacy.html" },
     { name: "Pharmacy: dispense (staff)", href: "/pharmacy-dispense.html" },
     { name: "Call-back requests (staff)", href: "/staff-callbacks.html" },
+    { name: "Hospital overview (admin)", href: "/dashboard.html" },
     { name: "Admin console", href: "/admin.html" },
   ];
 
@@ -109,6 +110,7 @@
               </form>
             </div>
           </div>
+          <button type="button" class="icon-btn" id="sh-theme"></button>
           <div class="dropdown emergency">
             <button type="button" class="btn btn-emergency" data-toggle aria-expanded="false">Emergency ${ICON.chevron}</button>
             <div class="panel" id="sh-emergency"><p class="note">Loading…</p></div>
@@ -242,6 +244,20 @@
   });
 
   if (!headerBox) return; // a page without the header: nothing more to wire up
+
+  // ---------------------------------------------------------- 2c. light / dark switch
+  // Moon in light mode ("go dark"), sun in dark mode ("go light"). core.js does the switching.
+  const themeBtn = document.getElementById("sh-theme");
+  const drawThemeButton = () => {
+    const dark = window.mediq.getTheme() === "dark";
+    themeBtn.innerHTML = window.mediq.svg(dark ? window.mediq.ICONS.sun : window.mediq.ICONS.moon, 18);
+    themeBtn.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+    themeBtn.title = themeBtn.getAttribute("aria-label");
+  };
+  drawThemeButton();
+  themeBtn.addEventListener("click", () => window.mediq.toggleTheme(themeBtn));
+  document.addEventListener("mediq:theme", drawThemeButton);
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawThemeButton);
 
   // ---------------------------------------------------------- 3. dropdowns and hamburger
 

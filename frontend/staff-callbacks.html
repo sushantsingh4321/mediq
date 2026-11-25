@@ -11,8 +11,8 @@
   <!-- core.js: theme (before the page is drawn) + shared helpers -->
   <script src="core.js"></script>
 </head>
-<body data-require-roles="admin">
-  <div id="site-header"></div>
+<body data-require-roles="admin" data-appbar-role="Call-backs">
+  <header id="app-bar"></header>
 
   <!-- Staff list. Reads GET /api/callback every 5 seconds. -->
   <main>
@@ -32,6 +32,7 @@
   </main>
 
   <div id="site-footer"></div>
+  <script src="shell.js"></script>   <!-- the floating sidebar -->
   <script src="site.js"></script>
   <script src="staff-callbacks.js"></script>
 </body>

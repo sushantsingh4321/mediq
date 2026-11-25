@@ -13,8 +13,8 @@
 </head>
 <!-- data-require-roles="admin": site.js sends anyone else to login or shows "No access".
      The server checks again on every request (deps.py: admin_only). -->
-<body data-require-roles="admin">
-  <div id="site-header"></div>
+<body data-require-roles="admin" data-appbar-role="Admin">
+  <header id="app-bar"></header>
 
   <main class="wide">
     <h1 class="page-title">Admin console</h1>
@@ -124,6 +124,7 @@
   </main>
 
   <div id="site-footer"></div>
+  <script src="shell.js"></script>   <!-- the floating sidebar -->
   <script src="site.js"></script>
   <script src="admin.js"></script>
 </body>
