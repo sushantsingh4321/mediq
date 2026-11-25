@@ -11,94 +11,92 @@
   <!-- core.js: theme (before the page is drawn) + shared helpers -->
   <script src="core.js"></script>
 </head>
-<!-- The hospital overview: live KPI cards and charts for admins.
-     Every number comes from the API (admin.py, beds.py, pharmacy.py); nothing is invented.
-     dashboard.js draws the charts as plain SVG, no chart library. -->
+<!-- The hospital overview (admins). Layout: a 12-column grid.
+       Main view: 4 key numbers, 1 trend (line), 1 comparison (sorted bars).
+       Everything else lives in the tabs below.
+     Every number comes from the API (admin.py, beds.py, pharmacy.py). dashboard.js draws it. -->
 <body data-appbar-role="Hospital overview">
   <header id="app-bar"></header>
 
   <main class="ui-page dash" id="main">
-    <div class="dash-head">
-      <div>
+    <div class="g12">
+      <!-- Title row -->
+      <div class="span-12 dash-head">
         <h1>Hospital overview</h1>
-        <p class="ui-lead">Live from every department. <span id="dash-updated" class="dash-updated"></span></p>
+        <p class="dash-updated" id="dash-updated" aria-live="polite"></p>
       </div>
-    </div>
-    <div id="dash-msg" hidden></div>
+      <div class="span-12" id="dash-msg" hidden></div>
 
-    <!-- 1. KPI cards -->
-    <section aria-label="Key numbers">
-      <div class="kpis" id="kpis"><div class="ui-loading" role="status">Loading…</div></div>
-    </section>
+      <!-- 1. The four key numbers -->
+      <section class="span-12" aria-label="Key numbers">
+        <div class="g12 kpis" id="kpis"><div class="span-12 ui-loading" role="status">Loading…</div></div>
+      </section>
 
-    <!-- 2. Today: arrivals by hour + where patients are now -->
-    <div class="dash-grid">
-      <section class="dash-card dash-card--wide" aria-labelledby="c-arrivals">
-        <div class="dash-card__head">
-          <h2 id="c-arrivals">Arrivals today, by hour</h2>
-          <p>Patients who joined a queue, hospital time</p>
+      <!-- 2. Trend: arrivals across the day (line) -->
+      <section class="span-8 panel-soft" aria-labelledby="c-arrivals">
+        <div class="sec-head">
+          <h2 id="c-arrivals">Arrivals today</h2>
+          <p>Patients joining a queue each hour, hospital time</p>
         </div>
         <div class="chart" id="chart-arrivals"></div>
-        <details class="dash-table"><summary>Show as a table</summary><div id="table-arrivals"></div></details>
       </section>
 
-      <section class="dash-card" aria-labelledby="c-flow">
-        <div class="dash-card__head">
-          <h2 id="c-flow">Patients right now</h2>
-          <p>Everyone in the OPD queues today</p>
-        </div>
-        <div id="chart-flow"></div>
-      </section>
-    </div>
-
-    <!-- 3. Departments and wards -->
-    <div class="dash-grid">
-      <section class="dash-card" aria-labelledby="c-waits">
-        <div class="dash-card__head">
-          <h2 id="c-waits">Average wait today</h2>
-          <p>Arrival to being called, per department</p>
+      <!-- 3. Comparison: wait by department (sorted bars) -->
+      <section class="span-4 panel-soft" aria-labelledby="c-waits">
+        <div class="sec-head">
+          <h2 id="c-waits">Average wait by department</h2>
+          <p>Arrival to being called, today</p>
         </div>
         <div id="chart-waits"></div>
-        <details class="dash-table"><summary>Show as a table</summary><div id="table-waits"></div></details>
       </section>
 
-      <section class="dash-card" aria-labelledby="c-beds">
-        <div class="dash-card__head">
-          <h2 id="c-beds">Bed occupancy</h2>
-          <p>Occupied beds in each ward</p>
+      <!-- 4. Details, one tab at a time -->
+      <section class="span-12" aria-labelledby="c-details">
+        <h2 id="c-details" class="ui-sr-only">Details</h2>
+        <div class="tabs" role="tablist" aria-label="Details">
+          <button role="tab" id="tab-queues" aria-controls="panel-queues" aria-selected="true">Queues</button>
+          <button role="tab" id="tab-beds" aria-controls="panel-beds" aria-selected="false" tabindex="-1">Beds</button>
+          <button role="tab" id="tab-bookings" aria-controls="panel-bookings" aria-selected="false" tabindex="-1">Bookings</button>
+          <button role="tab" id="tab-pharmacy" aria-controls="panel-pharmacy" aria-selected="false" tabindex="-1">Pharmacy</button>
+          <button role="tab" id="tab-ops" aria-controls="panel-ops" aria-selected="false" tabindex="-1">Staff and fleet</button>
         </div>
-        <div id="chart-beds"></div>
-        <p class="dash-link"><a href="/index.html#beds">Manage beds</a></p>
-      </section>
-    </div>
 
-    <!-- 4. Ahead: bookings, pharmacy, call-backs -->
-    <div class="dash-grid dash-grid--3">
-      <section class="dash-card" aria-labelledby="c-bookings">
-        <div class="dash-card__head">
-          <h2 id="c-bookings">Bookings, next 7 days</h2>
-          <p>Requested, accepted and checked in</p>
+        <div class="tab-panel panel-soft" role="tabpanel" id="panel-queues" aria-labelledby="tab-queues" tabindex="0">
+          <div class="g12">
+            <div class="span-12" id="queues-table"></div>
+          </div>
         </div>
-        <div class="chart" id="chart-bookings"></div>
-        <details class="dash-table"><summary>Show as a table</summary><div id="table-bookings"></div></details>
-      </section>
 
-      <section class="dash-card" aria-labelledby="c-pharmacy">
-        <div class="dash-card__head">
-          <h2 id="c-pharmacy">Pharmacy stock</h2>
-          <p>Batches that need action</p>
+        <div class="tab-panel panel-soft" role="tabpanel" id="panel-beds" aria-labelledby="tab-beds" tabindex="0" hidden>
+          <div class="g12">
+            <div class="span-7"><h3 class="sub-title">Occupancy by ward, fullest first</h3><div id="chart-beds"></div></div>
+            <div class="span-5" id="beds-table"></div>
+          </div>
         </div>
-        <div id="chart-pharmacy"></div>
-        <p class="dash-link"><a href="/pharmacy-alerts.html">Open stock alerts</a></p>
-      </section>
 
-      <section class="dash-card" aria-labelledby="c-calls">
-        <div class="dash-card__head">
-          <h2 id="c-calls">Call-back requests</h2>
-          <p>From the website, all time</p>
+        <div class="tab-panel panel-soft" role="tabpanel" id="panel-bookings" aria-labelledby="tab-bookings" tabindex="0" hidden>
+          <div class="g12">
+            <div class="span-7"><h3 class="sub-title">Active bookings, next 7 days</h3><div class="chart" id="chart-bookings"></div></div>
+            <div class="span-5" id="bookings-table"></div>
+          </div>
         </div>
-        <div id="chart-calls"></div>
-        <p class="dash-link"><a href="/staff-callbacks.html">Open call-backs</a></p>
+
+        <div class="tab-panel panel-soft" role="tabpanel" id="panel-pharmacy" aria-labelledby="tab-pharmacy" tabindex="0" hidden>
+          <div class="g12">
+            <div class="span-7" id="pharmacy-table"></div>
+            <div class="span-5 aside-note">
+              <p>Expired batches must come off the shelf today. Batches expiring within 30 days should be used first or returned.</p>
+              <p><a href="/pharmacy-alerts.html">Open stock alerts</a></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel panel-soft" role="tabpanel" id="panel-ops" aria-labelledby="tab-ops" tabindex="0" hidden>
+          <div class="g12">
+            <div class="span-6" id="ops-table"></div>
+            <div class="span-6" id="calls-table"></div>
+          </div>
+        </div>
       </section>
     </div>
   </main>

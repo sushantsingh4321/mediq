@@ -41,15 +41,21 @@ def test_every_page_has_a_light_dark_switch():
 
 def test_dashboard_page_has_kpis_charts_and_tables():
     html = client.get("/dashboard.html").text
-    for part in ['id="kpis"', 'id="chart-arrivals"', 'id="chart-flow"', 'id="chart-waits"', 'id="chart-beds"',
-                 'id="chart-bookings"', 'id="chart-pharmacy"', 'id="chart-calls"', 'src="shell.js"', 'id="app-bar"']:
+    # Main view: key numbers, one trend, one comparison. Details sit in tabs.
+    for part in ['id="kpis"', 'id="chart-arrivals"', 'id="chart-waits"', 'role="tablist"', 'role="tabpanel"',
+                 'id="queues-table"', 'id="chart-beds"', 'id="chart-bookings"', 'id="pharmacy-table"',
+                 'src="shell.js"', 'id="app-bar"', 'class="g12"']:
         assert part in html, part
-    assert html.count("Show as a table") >= 3            # every axis chart has a table version
+    assert html.count('role="tab"') == 5 and html.count("hidden>") >= 4      # one tab open at a time
     js = client.get("/dashboard.js").text
     assert "/admin/activity" in js and "/admin/overview" in js   # real numbers only
     assert 'checkAccess(u, ["admin"])' in js                     # admins only (the API checks too)
+    assert "lineChart" in js and "sortedBars" in js              # a line for the trend, sorted bars to compare
+    assert "ArrowRight" in js                                     # tabs work with the keyboard
     assert "<script" not in js and "chart.js" not in js.lower()  # plain SVG, no chart library
     assert '/dashboard.html' in client.get("/shell.js").text     # in the sidebar
     assert 'admin: "/dashboard.html"' in client.get("/core.js").text   # admins land here after login
     css = client.get("/style.css").text
-    assert "--c-green" in css and ':root[data-theme="dark"] {\n  --c-green' in css   # its own dark colours
+    assert ".g12" in css and "repeat(12, minmax(0, 1fr))" in css         # the 12-column grid
+    assert ':root[data-theme="dark"] {\n  --c-neutral' in css             # its own dark colours
+    assert ".dash-tbl .num { text-align: right" in css                     # numbers right-aligned

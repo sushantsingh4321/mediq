@@ -2105,3 +2105,20 @@ Also good to know: `vercel dev` reads your **`.env`**, and an empty
   the same colour to about 1 in 12 men, so the call-back bar orders them green, blue, amber, red.
 - *Charts need words too.* Each chart has a table version and keyboard-reachable tooltips, and a
   warning colour always comes with an icon and a word ("Full", "Expired").
+
+## Part 23. Redesigning the overview with dashboard rules
+
+The overview was redone with six rules that suit any dashboard:
+1. **A 12-column grid** (`.g12`, `.span-3`, `.span-8`...): every block takes whole columns, so
+   edges line up. Tablets switch to 6 columns, phones to one.
+2. **Whitespace over borders:** the key numbers have no boxes at all; sections are soft white
+   panels on the pale page.
+3. **Fewer things on the main view:** 4 numbers, one trend, one comparison. The rest sits in
+   **tabs** (Queues, Beds, Bookings, Pharmacy, Staff and fleet). Tabs follow the ARIA pattern:
+   `role="tab"`, `aria-selected`, and arrow keys move between them.
+4. **Mostly grey, one accent:** cobalt marks only the key point (this hour, the longest wait);
+   amber/red appear only for problems, with an icon and a word.
+5. **Scannable numbers:** whole minutes, whole percents, numbers right-aligned in tables.
+6. **The chart fits the question:** a line for "how did today go?" (a trend), sorted bars for
+   "which department waits longest?" (a comparison). The hour that isn't over yet is dashed,
+   so a half-finished hour doesn't look like a sudden drop.

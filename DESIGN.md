@@ -70,14 +70,17 @@ The hero and the waiting-room board are dark in both.
   bar's menu button (Esc or the backdrop closes it).
 - **Light/dark switch on every page**: in the app bar on app pages, beside search in the website header.
 
-## Charts (dashboard.html)
+## Dashboards (dashboard.html)
 
-- Plain SVG/HTML drawn by `dashboard.js`, no chart library. Real numbers only.
-- One hue (cobalt) for magnitude; the current hour / today is the solid bar, the rest a lighter step.
-- Parts of a whole use **green, cobalt, amber, red** in that order (red never touches green),
-  checked for colour-blind readers in light and dark (`--c-*` tokens; dark has its own steps).
-- Status (amber = needs attention, red = critical) always comes with an icon and a word.
-- Every axis chart has "Show as a table"; every bar has a hover/focus tooltip.
+- **Grid:** 12 columns (6 on tablets, 1 on phones); every block spans whole columns (`.g12`, `.span-N`).
+- **Whitespace over borders:** sections are soft panels (white on the pale page, no border);
+  KPIs are bare numbers with space around them, no boxes.
+- **Density:** the main view holds 4 key numbers, one trend, one comparison. Breakdowns go in tabs.
+- **Colour:** neutral marks; cobalt only for the key point (now, the longest wait); amber/red only
+  for a problem, always with an icon and a word. Status text passes 4.5:1 in both themes.
+- **Charts match the question:** line for a trend over time, sorted bars for comparisons, columns
+  for a short run of days. Plain SVG, no library, hover/focus tooltips.
+- **Numbers:** whole minutes and whole percents; tables right-align numbers in tabular figures.
 
 ## Components
 
