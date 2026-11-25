@@ -1,0 +1,443 @@
+// lang-hi.js: the Hindi dictionary. core.js loads it only when Hindi is chosen.
+//
+//   phrases:  exact English text  ->  Hindi
+//   patterns: English sentences with numbers or names in them. $1, $2 ... are the parts in
+//             brackets. A function gets t (translate) first, so it can translate a part too.
+//   days / months: for dates like "Thu 26 Nov"
+//
+// To add a translation: copy the English EXACTLY as it shows on the page, add a line.
+// Names of people, token numbers (GEN-014) and "mediQ" are left as they are.
+// Medical words: everyday Hindi first, common English loanwords where patients use them (OPD, टोकन).
+// Please have a native speaker review the medical terms before going live.
+
+window.MEDIQ_HI = {
+  days: { Mon: "सोम", Tue: "मंगल", Wed: "बुध", Thu: "गुरु", Fri: "शुक्र", Sat: "शनि", Sun: "रवि" },
+  months: { Jan: "जन॰", Feb: "फ़र॰", Mar: "मार्च", Apr: "अप्रैल", May: "मई", Jun: "जून",
+            Jul: "जुल॰", Aug: "अग॰", Sep: "सित॰", Oct: "अक्तू॰", Nov: "नव॰", Dec: "दिस॰" },
+
+  phrases: {
+    // ---------------------------------------------------------------- header, menus, footer
+    "Book an appointment": "अपॉइंटमेंट बुक करें",
+    "Book appointment": "अपॉइंटमेंट बुक करें",
+    "Book Appointment": "अपॉइंटमेंट बुक करें",
+    "My appointments": "मेरे अपॉइंटमेंट",
+    "Appointments": "अपॉइंटमेंट",
+    "Log in": "लॉग इन करें",
+    "Log out": "लॉग आउट",
+    "Sign out": "साइन आउट",
+    "Create an account": "खाता बनाएँ",
+    "Create account": "खाता बनाएँ",
+    "Hospitals": "अस्पताल",
+    "Specialities": "विशेषज्ञताएँ",
+    "Speciality": "विशेषज्ञता",
+    "Services": "सेवाएँ",
+    "For staff": "स्टाफ़ के लिए",
+    "Emergency": "आपातकाल",
+    "Search the site": "साइट में खोजें",
+    "Hospital, speciality or condition": "अस्पताल, विशेषज्ञता या बीमारी",
+    "Skip to content": "मुख्य सामग्री पर जाएँ",
+    "Open menu": "मेन्यू खोलें",
+    "Close menu": "मेन्यू बंद करें",
+    "Main menu": "मुख्य मेन्यू",
+    "Switch to dark mode": "डार्क मोड चालू करें",
+    "Switch to light mode": "लाइट मोड चालू करें",
+    "mediQ Health home": "mediQ Health होम",
+    "mediQ home": "mediQ होम",
+    "In a medical emergency, call:": "चिकित्सा आपातकाल में कॉल करें:",
+    "Ambulance, anywhere in India": "एम्बुलेंस, पूरे भारत में",
+    "Police, fire and ambulance": "पुलिस, दमकल और एम्बुलेंस",
+    "Every mediQ hospital has a 24-hour emergency department.": "हर mediQ अस्पताल में 24 घंटे खुला आपातकालीन विभाग है।",
+    "Ambulance": "एम्बुलेंस",
+    "All emergencies": "सभी आपात स्थितियाँ",
+    "In an emergency": "आपातकाल में",
+    "Not urgent?": "जल्दी नहीं है?",
+    "Patients": "मरीज़",
+    "Patient": "मरीज़",
+    "Staff": "स्टाफ़",
+    "Doctor timetable": "डॉक्टरों की समय-सारणी",
+    "Find a medicine": "दवा खोजें",
+    "Bed availability": "बिस्तर उपलब्धता",
+    "Request a call back": "कॉल बैक का अनुरोध करें",
+    "Doctor's desk": "डॉक्टर डेस्क",
+    "Doctor: my appointments": "डॉक्टर: मेरे अपॉइंटमेंट",
+    "Doctor schedule (timetable)": "डॉक्टरों की समय-सारणी",
+    "Waiting room display": "प्रतीक्षा कक्ष डिस्प्ले",
+    "Department dashboard": "विभाग डैशबोर्ड",
+    "Ambulance dispatch": "एम्बुलेंस भेजना",
+    "Pharmacy: medicine catalogue": "फ़ार्मेसी: दवाओं की सूची",
+    "Pharmacy: dispense (staff)": "फ़ार्मेसी: दवा देना (स्टाफ़)",
+    "Call-back requests (staff)": "कॉल बैक अनुरोध (स्टाफ़)",
+    "Hospital overview (admin)": "अस्पताल का सारांश (एडमिन)",
+    "Admin console": "एडमिन कंसोल",
+    "OPD system": "OPD सिस्टम",
+    "Staff log in": "स्टाफ़ लॉग इन",
+    "Pharmacy counter": "फ़ार्मेसी काउंटर",
+    "No doctor accounts yet. Create one first (": "अभी कोई डॉक्टर खाता नहीं है। पहले एक बनाएँ (",
+    "with role \"doctor\" on": "role \"doctor\" के साथ,",
+    "© 2026 mediQ Health, a fictional demo. Names, hospitals and addresses are made up.":
+      "© 2026 mediQ Health, एक काल्पनिक डेमो। नाम, अस्पताल और पते असली नहीं हैं।",
+    "Photos: Legend1306 (CC BY-SA 4.0) and Harrison Keely (CC BY 4.0), via Wikimedia Commons":
+      "फ़ोटो: Legend1306 (CC BY-SA 4.0) और Harrison Keely (CC BY 4.0), Wikimedia Commons से",
+
+    // ---------------------------------------------------------------- sidebar and app bar
+    "My care": "मेरी देखभाल",
+    "Doctor": "डॉक्टर",
+    "Hospital": "अस्पताल",
+    "Pharmacy": "फ़ार्मेसी",
+    "Admin": "एडमिन",
+    "Beds": "बिस्तर",
+    "Waiting-room display": "प्रतीक्षा कक्ष डिस्प्ले",
+    "Medicines": "दवाएँ",
+    "Dispense": "दवा देना",
+    "Stock": "स्टॉक",
+    "Alerts": "अलर्ट",
+    "Suppliers": "सप्लायर",
+    "Overview": "सारांश",
+    "Call-back requests": "कॉल बैक अनुरोध",
+    "Collapse": "छोटा करें",
+    "Collapse menu": "मेन्यू छोटा करें",
+    "Expand menu": "मेन्यू बड़ा करें",
+    "Current time": "अभी का समय",
+    "Demo City Hospital": "डेमो सिटी अस्पताल",
+    "Loading…": "लोड हो रहा है…",
+
+    // ---------------------------------------------------------------- home page
+    "mediQ Health – Hospitals, OPD queues and bed availability": "mediQ Health – अस्पताल, OPD कतारें और बिस्तर उपलब्धता",
+    "Care that doesn't keep you waiting": "ऐसा इलाज, जिसमें इंतज़ार नहीं",
+    "Live OPD queues, real-time bed availability and one helpline for every mediQ hospital.":
+      "हर mediQ अस्पताल के लिए लाइव OPD कतारें, बिस्तरों की ताज़ा जानकारी और एक हेल्पलाइन।",
+    "Wait for a new patient right now": "नए मरीज़ के लिए अभी का इंतज़ार",
+    "No wait": "कोई इंतज़ार नहीं",
+    "Nobody waiting": "कोई कतार में नहीं",
+    "No OPD departments yet.": "अभी कोई OPD विभाग नहीं है।",
+    "Wait at home, not in a corridor": "गलियारे में नहीं, घर पर इंतज़ार करें",
+    "Book a time with a doctor, then follow your place in the queue on your phone.":
+      "डॉक्टर से समय लें, फिर फ़ोन पर कतार में अपनी जगह देखते रहें।",
+    "Book a time": "समय बुक करें",
+    "Choose a speciality, a doctor and a time that suits you. It takes about a minute.":
+      "विशेषज्ञता, डॉक्टर और अपनी सुविधा का समय चुनें। लगभग एक मिनट लगता है।",
+    "Tap \"I've arrived\"": "\"मैं पहुँच गया/गई\" दबाएँ",
+    "When you reach the hospital you get a token and see how many people are ahead of you.":
+      "अस्पताल पहुँचने पर आपको टोकन मिलता है और दिखता है कि आपसे पहले कितने लोग हैं।",
+    "Walk in when it's your turn": "अपनी बारी आने पर अंदर जाएँ",
+    "Your phone tells you which room to go to. No names shouted across a hall.":
+      "फ़ोन बताता है कि किस कमरे में जाना है। हॉल में नाम पुकारने की ज़रूरत नहीं।",
+    "Your token": "आपका टोकन",
+    "Find the right doctor": "सही डॉक्टर खोजें",
+    "Not sure who to see? Pick the closest match and our team will call you to help you book.":
+      "पता नहीं किस डॉक्टर को दिखाएँ? सबसे मिलता-जुलता विकल्प चुनें, हमारी टीम कॉल करके बुकिंग में मदद करेगी।",
+    "Ask us": "हमसे पूछें",
+    "A doctor listening to a patient at a medical camp": "मेडिकल कैंप में मरीज़ की बात सुनती डॉक्टर",
+    "A quiet, bright hospital waiting room": "अस्पताल का शांत, रोशन प्रतीक्षा कक्ष",
+    "Live across the network": "पूरे नेटवर्क का लाइव हाल",
+    "These numbers come straight from our hospitals and update every few seconds.":
+      "ये आँकड़े सीधे हमारे अस्पतालों से आते हैं और हर कुछ सेकंड में बदलते हैं।",
+    "patients waiting in OPD": "मरीज़ OPD में इंतज़ार में",
+    "beds free right now": "बिस्तर अभी खाली",
+    "doctors on duty": "डॉक्टर ड्यूटी पर",
+    "ambulances ready": "एम्बुलेंस तैयार",
+    "Our hospitals": "हमारे अस्पताल",
+    "One booking and one queue across every mediQ hospital, wherever you are.":
+      "आप कहीं भी हों, हर mediQ अस्पताल में एक ही बुकिंग और एक ही कतार।",
+    "Rather talk to someone?": "किसी से बात करना चाहते हैं?",
+    "Leave your number and our team will call you back, usually within a few hours.":
+      "अपना नंबर दें, हमारी टीम आमतौर पर कुछ घंटों में आपको कॉल करेगी।",
+    "Your name": "आपका नाम",
+    "Mobile number": "मोबाइल नंबर",
+    "Country code": "देश का कोड",
+    "Choose a speciality": "विशेषज्ञता चुनें",
+    "I agree that mediQ Health may call or message me about this enquiry.":
+      "मैं सहमत हूँ कि mediQ Health इस पूछताछ के बारे में मुझे कॉल या मैसेज कर सकता है।",
+    "Call me back": "मुझे कॉल करें",
+    "Care that doesn't keep you waiting.": "ऐसा इलाज, जिसमें इंतज़ार नहीं।",
+
+    // Specialities and conditions (site_content.json)
+    "Cardiology": "हृदय रोग",
+    "Neurology": "तंत्रिका रोग (न्यूरोलॉजी)",
+    "Orthopaedics": "हड्डी रोग",
+    "Oncology": "कैंसर रोग",
+    "Paediatrics": "शिशु रोग",
+    "General Medicine": "जनरल मेडिसिन",
+    "Chest pain": "सीने में दर्द",
+    "High blood pressure": "हाई ब्लड प्रेशर",
+    "Heart rhythm problems": "दिल की धड़कन की समस्या",
+    "Heart failure": "हार्ट फ़ेल्योर",
+    "Migraine": "माइग्रेन",
+    "Stroke": "स्ट्रोक (लकवा)",
+    "Epilepsy": "मिर्गी",
+    "Parkinson's disease": "पार्किंसन रोग",
+    "Knee pain": "घुटने का दर्द",
+    "Back pain": "कमर दर्द",
+    "Fractures": "हड्डी टूटना",
+    "Joint replacement": "जोड़ बदलना",
+    "Breast cancer": "स्तन कैंसर",
+    "Lung cancer": "फेफड़ों का कैंसर",
+    "Blood cancers": "रक्त कैंसर",
+    "Chemotherapy care": "कीमोथेरेपी देखभाल",
+    "Fever in children": "बच्चों में बुखार",
+    "Vaccinations": "टीकाकरण",
+    "Asthma": "अस्थमा (दमा)",
+    "Growth checkups": "बढ़त की जाँच",
+    "Diabetes": "डायबिटीज़ (मधुमेह)",
+    "Fever and infections": "बुखार और संक्रमण",
+    "Thyroid problems": "थायरॉइड की समस्या",
+    "Health checkups": "स्वास्थ्य जाँच",
+
+    // Hospitals, places
+    "City Hospital": "सिटी अस्पताल",
+    "Lakeside Hospital": "लेकसाइड अस्पताल",
+    "Heritage Hospital": "हेरिटेज अस्पताल",
+    "Desert Care Clinic": "डेज़र्ट केयर क्लिनिक",
+    "Riverfront Hospital": "रिवरफ़्रंट अस्पताल",
+    "Coastal Hospital": "कोस्टल अस्पताल",
+    "Central Hospital": "सेंट्रल अस्पताल",
+    "Lake View Road": "लेक व्यू रोड",
+    "Ring Road": "रिंग रोड",
+    "Station Road": "स्टेशन रोड",
+    "Harbour Road": "हार्बर रोड",
+    "Pune": "पुणे", "Nagpur": "नागपुर", "Jaipur": "जयपुर", "Jodhpur": "जोधपुर",
+    "Lucknow": "लखनऊ", "Kochi": "कोच्चि", "Bhopal": "भोपाल",
+    "Maharashtra": "महाराष्ट्र", "Rajasthan": "राजस्थान", "Uttar Pradesh": "उत्तर प्रदेश",
+    "Kerala": "केरल", "Madhya Pradesh": "मध्य प्रदेश",
+    "India": "भारत", "Nepal": "नेपाल", "Bangladesh": "बांग्लादेश", "Sri Lanka": "श्रीलंका",
+    "UAE": "संयुक्त अरब अमीरात", "UK": "ब्रिटेन", "USA / Canada": "अमेरिका / कनाडा",
+
+    // ---------------------------------------------------------------- log in, sign up
+    "Patients and hospital staff use the same login.": "मरीज़ और अस्पताल स्टाफ़ एक ही लॉग इन इस्तेमाल करते हैं।",
+    "Email": "ईमेल",
+    "Password": "पासवर्ड",
+    "New to mediQ Health?": "mediQ Health पर नए हैं?",
+    "For patients. Hospital staff accounts are created by an admin.": "मरीज़ों के लिए। अस्पताल स्टाफ़ के खाते एडमिन बनाते हैं।",
+    "Full name": "पूरा नाम",
+    "Mobile number (optional)": "मोबाइल नंबर (ज़रूरी नहीं)",
+    "At least 8 characters.": "कम से कम 8 अक्षर।",
+    "Confirm password": "पासवर्ड दोबारा लिखें",
+    "Already have an account?": "पहले से खाता है?",
+    "Please enter your email.": "कृपया अपना ईमेल लिखें।",
+    "That doesn't look like an email address.": "यह ईमेल पता सही नहीं लगता।",
+    "Please enter your password.": "कृपया अपना पासवर्ड लिखें।",
+    "Please enter your full name.": "कृपया अपना पूरा नाम लिखें।",
+    "Please enter a 10-digit Indian mobile number, or leave it empty.": "कृपया 10 अंकों का भारतीय मोबाइल नंबर लिखें, या इसे खाली छोड़ दें।",
+    "The two passwords don't match.": "दोनों पासवर्ड एक जैसे नहीं हैं।",
+    "Incorrect email or password.": "ईमेल या पासवर्ड गलत है।",
+    "An account with this email already exists. Try logging in.": "इस ईमेल से खाता पहले से है। लॉग इन करके देखें।",
+    "Please enter a valid 10-digit Indian mobile number.": "कृपया सही 10 अंकों का भारतीय मोबाइल नंबर लिखें।",
+    "Please enter a valid 10-digit Indian mobile number": "कृपया सही 10 अंकों का भारतीय मोबाइल नंबर लिखें",
+
+    // ---------------------------------------------------------------- call back
+    "Leave your mobile number. A mediQ Health team member will call you shortly.":
+      "अपना मोबाइल नंबर दें। mediQ Health टीम का कोई सदस्य जल्द ही आपको कॉल करेगा।",
+    "Mobile number (India)": "मोबाइल नंबर (भारत)",
+    "10-digit mobile number": "10 अंकों का मोबाइल नंबर",
+    "I agree that mediQ Health may call me on this number.": "मैं सहमत हूँ कि mediQ Health मुझे इस नंबर पर कॉल कर सकता है।",
+    "Please enter your name": "कृपया अपना नाम लिखें",
+    "Please tick the box so we may call you": "कृपया बॉक्स पर टिक करें, ताकि हम आपको कॉल कर सकें",
+    "Please tick the consent box so we may call you": "कृपया सहमति वाले बॉक्स पर टिक करें, ताकि हम आपको कॉल कर सकें",
+    "Thank you. Our team is calling you shortly.": "धन्यवाद। हमारी टीम जल्द ही आपको कॉल कर रही है।",
+    "Thank you. We couldn't start the call automatically, but our team has your request and will call you.":
+      "धन्यवाद। कॉल अपने-आप शुरू नहीं हो सकी, पर आपका अनुरोध हमारी टीम के पास है और वह आपको कॉल करेगी।",
+
+    // ---------------------------------------------------------------- doctor timetable
+    "Doctor schedule": "डॉक्टरों की समय-सारणी",
+    "Weekly OPD sessions.": "हर हफ़्ते के OPD सत्र।",
+    "Department": "विभाग",
+    "All departments": "सभी विभाग",
+    "On duty now": "अभी ड्यूटी पर",
+    "No doctor is in OPD right now.": "अभी कोई डॉक्टर OPD में नहीं है।",
+    "No OPD": "OPD नहीं",
+    "today": "आज",
+    "Today": "आज",
+    "Monday": "सोमवार", "Tuesday": "मंगलवार", "Wednesday": "बुधवार", "Thursday": "गुरुवार",
+    "Friday": "शुक्रवार", "Saturday": "शनिवार", "Sunday": "रविवार",
+    "Add an OPD session": "OPD सत्र जोड़ें",
+    "Add session": "सत्र जोड़ें",
+    "Day": "दिन",
+    "Time": "समय",
+    "From": "से",
+    "To": "तक",
+    "Room": "कमरा",
+    "Remove this session": "यह सत्र हटाएँ",
+    "Remove": "हटाएँ",
+
+    // ---------------------------------------------------------------- booking
+    "Choose a department, a doctor and a time. It takes about a minute.": "विभाग, डॉक्टर और समय चुनें। लगभग एक मिनट लगता है।",
+    "What's wrong?": "क्या तकलीफ़ है?",
+    "Your symptoms, in your own words": "अपने शब्दों में अपने लक्षण लिखें",
+    "For example: fever and sore throat for 3 days": "जैसे: 3 दिन से बुखार और गले में खराश",
+    "This helps the doctor prepare.": "इससे डॉक्टर को तैयारी में मदद मिलती है।",
+    "Finding doctors…": "डॉक्टर खोजे जा रहे हैं…",
+    "Checking free times…": "खाली समय देखे जा रहे हैं…",
+    "No doctors take bookings in this department yet. Please try another department or call us.":
+      "इस विभाग में अभी कोई डॉक्टर बुकिंग नहीं लेता। कृपया दूसरा विभाग चुनें या हमें कॉल करें।",
+    "No free times on this day. Please pick another day.": "इस दिन कोई समय खाली नहीं है। कृपया दूसरा दिन चुनें।",
+    "Tell us briefly what's wrong": "थोड़े में बताएँ कि क्या तकलीफ़ है",
+    "Write a few words about your symptoms, for example \"fever for 3 days\".":
+      "अपने लक्षणों के बारे में कुछ शब्द लिखें, जैसे \"3 दिन से बुखार\"।",
+    "Booked and confirmed": "बुक हो गया और पक्का है",
+    "Booking sent: waiting for the doctor to accept": "बुकिंग भेज दी गई: डॉक्टर की मंज़ूरी का इंतज़ार है",
+    "See my appointments": "मेरे अपॉइंटमेंट देखें",
+    "Not booked": "बुक नहीं हुआ",
+
+    // Patient pages: locked, banners, status
+    "Log in to book": "बुक करने के लिए लॉग इन करें",
+    "This page is for patients": "यह पेज मरीज़ों के लिए है",
+    "You need a patient account": "आपको मरीज़ वाला खाता चाहिए",
+    "Log in, or create a free account in a minute. Then you can book and follow your appointments here.":
+      "लॉग इन करें, या एक मिनट में मुफ़्त खाता बनाएँ। फिर आप यहाँ बुक कर सकेंगे और अपने अपॉइंटमेंट देख सकेंगे।",
+    "Booking is for patient accounts": "बुकिंग सिर्फ़ मरीज़ वाले खातों के लिए है",
+    "It's your turn": "आपकी बारी है",
+    "Booked": "बुक हो गया",
+    "Booking accepted": "बुकिंग स्वीकार हुई",
+    "Request sent": "अनुरोध भेजा गया",
+    "Booking not accepted": "बुकिंग स्वीकार नहीं हुई",
+    "Missed appointment": "अपॉइंटमेंट छूट गया",
+    "Update": "नई जानकारी",
+    "Got it": "ठीक है",
+    "Waiting for the doctor to accept": "डॉक्टर की मंज़ूरी का इंतज़ार",
+    "Confirmed": "पक्का",
+    "Not accepted": "स्वीकार नहीं हुआ",
+    "Cancelled": "रद्द",
+    "Checked in": "चेक-इन हो गया",
+    "Completed": "पूरा हुआ",
+    "Missed": "छूट गया",
+    "requested": "अनुरोध वाली", "accepted": "स्वीकार की हुई", "rejected": "अस्वीकार की हुई",
+    "cancelled": "रद्द", "checked in": "चेक-इन हो चुकी", "completed": "पूरी हो चुकी", "no show": "छूटी हुई",
+    "Waiting": "इंतज़ार में",
+    "Called": "बुलाया गया",
+    "In consultation": "डॉक्टर के पास",
+    "Done": "हो गया",
+    "Skipped": "छोड़ा गया",
+
+    // ---------------------------------------------------------------- my appointments
+    "Upcoming": "आने वाले",
+    "Past, cancelled and not accepted": "पुराने, रद्द और स्वीकार न हुए",
+    "This page updates by itself.": "यह पेज अपने-आप अपडेट होता है।",
+    "Book another appointment": "एक और अपॉइंटमेंट बुक करें",
+    "Loading your appointments…": "आपके अपॉइंटमेंट लोड हो रहे हैं…",
+    "You're next.": "अगली बारी आपकी है।",
+    "It's your turn.": "आपकी बारी है।",
+    "You're checked in.": "आपका चेक-इन हो गया है।",
+    "Keep this page open: it will show your room when the doctor calls you.":
+      "यह पेज खुला रखें: डॉक्टर के बुलाने पर यहीं आपका कमरा दिखेगा।",
+    "book again": "फिर से बुक करें",
+    "I've arrived": "मैं पहुँच गया/गई",
+    "Cancel booking": "बुकिंग रद्द करें",
+    "Cancelling closed 1 hour before the appointment. Please call the hospital to change it.":
+      "रद्द करने का समय अपॉइंटमेंट से 1 घंटा पहले बंद हो गया। बदलाव के लिए कृपया अस्पताल को कॉल करें।",
+    "Your token:": "आपका टोकन:",
+    "The doctor's reason:": "डॉक्टर का कारण:",
+    "The doctor accepts bookings one by one. This page will show the answer.":
+      "डॉक्टर बुकिंग एक-एक करके स्वीकार करते हैं। जवाब इसी पेज पर दिखेगा।",
+    "No upcoming appointments.": "कोई आने वाला अपॉइंटमेंट नहीं है।",
+    "Book one": "बुक करें",
+    "Couldn't load your appointments": "आपके अपॉइंटमेंट लोड नहीं हो सके",
+    "Not checked in": "चेक-इन नहीं हुआ",
+    "Booking cancelled": "बुकिंग रद्द हो गई",
+    "Not cancelled": "रद्द नहीं हुई",
+    "Cancel this appointment? The time will be offered to someone else.":
+      "यह अपॉइंटमेंट रद्द करें? यह समय किसी और को दे दिया जाएगा।",
+
+    // Server messages for patients (backend/app/services/appointments.py)
+    "That date has already passed. Pick today or a later day.": "वह तारीख बीत चुकी है। आज या बाद का दिन चुनें।",
+    "That doctor wasn't found. Choose a doctor from the list.": "वह डॉक्टर नहीं मिला। सूची में से डॉक्टर चुनें।",
+    "Tell the doctor briefly why you're coming, for example \"fever for 3 days\".":
+      "डॉक्टर को थोड़े में बताएँ कि आप क्यों आ रहे हैं, जैसे \"3 दिन से बुखार\"।",
+    "That department wasn't found.": "वह विभाग नहीं मिला।",
+    "That time has already started. Pick a later slot.": "वह समय शुरू हो चुका है। बाद का समय चुनें।",
+    "Sorry, someone has just booked that slot. Pick another time.": "माफ़ कीजिए, अभी-अभी किसी ने यह समय बुक कर लिया। दूसरा समय चुनें।",
+    "You already have a booking with this doctor that day.": "उस दिन इस डॉक्टर के साथ आपकी बुकिंग पहले से है।",
+    "The hospital system is busy. Please try again in a moment.": "अस्पताल का सिस्टम व्यस्त है। कृपया थोड़ी देर में फिर कोशिश करें।",
+    "Already checked in. Please wait to be called.": "चेक-इन पहले ही हो चुका है। कृपया बुलाए जाने का इंतज़ार करें।",
+    "Check-in closed 15 minutes after your appointment time. Please speak to the doctor's assistant or book again.":
+      "चेक-इन अपॉइंटमेंट के समय से 15 मिनट बाद बंद हो गया। कृपया डॉक्टर के सहायक से बात करें या फिर से बुक करें।",
+    "Your session has expired. Please log in again.": "आपका सत्र खत्म हो गया है। कृपया फिर से लॉग इन करें।",
+  },
+
+  // Checked from top to bottom; the first that matches wins.
+  patterns: [
+    // Page titles: "Book an appointment – mediQ Health"
+    [/^(.+) – mediQ Health$/, (t, m, x) => `${t(x)} – mediQ Health`],
+
+    // Notifications (patient.js shows them without the "Booked: " start)
+    [/^(.+?), (.+, \d\d:\d\d)\. Your token is (\S+)\. On the day, press "I've arrived" when you reach the hospital\.$/,
+      "$1, $2। आपका टोकन $3 है। उस दिन अस्पताल पहुँचकर \"मैं पहुँच गया/गई\" दबाएँ।"],
+    [/^Booking request sent to (.+) for (.+)\. You'll see here when the doctor answers\.$/,
+      "$1 को $2 के लिए बुकिंग अनुरोध भेजा गया। डॉक्टर के जवाब देने पर यहीं दिखेगा।"],
+    [/^(.+) accepted your booking for (.+)\. Your token is (\S+)\.$/, "$1 ने $2 की आपकी बुकिंग स्वीकार कर ली। आपका टोकन $3 है।"],
+    [/^(.+) couldn't accept your booking for (.+)\. Reason: (.*)$/, "$1 $2 की आपकी बुकिंग स्वीकार नहीं कर सके। कारण: $3"],
+    [/^Please go to Room (\d+) now \((\S+)\)\.$/, "कृपया अभी कमरा $1 में जाएँ ($2)।"],
+    [/^You didn't check in for (.+) with (.+), so the booking was marked as missed\. Please book again if you still need to be seen\.$/,
+      "आपने $2 के साथ $1 के लिए चेक-इन नहीं किया, इसलिए बुकिंग छूटी हुई मानी गई। अगर अब भी दिखाना है तो फिर से बुक करें।"],
+
+    // Home page live numbers
+    [/^(\d+) min$/, "$1 मिनट"],
+    [/^(\d+) waiting$/, "$1 इंतज़ार में"],
+    [/^now serving (.+)$/, "अभी बारी: $1"],
+    [/^Today, (\d\d:\d\d)$/, "आज, $1"],
+    [/^It's your turn\. Please go to Room (\d+)\.$/, "आपकी बारी है। कृपया कमरा $1 में जाएँ।"],
+    [/^Example of the My appointments screen: token (\S+), it's your turn, go to Room (\d+)$/,
+      "मेरे अपॉइंटमेंट स्क्रीन का उदाहरण: टोकन $1, आपकी बारी है, कमरा $2 में जाएँ"],
+    [/^Thank you, (.+)\. We'll call you on (.+) soon \(enquiry #(\d+)\)\.$/, "धन्यवाद, $1। हम जल्द ही आपको $2 पर कॉल करेंगे (पूछताछ #$3)।"],
+    [/^(Thank you\..+?) We'll call (\S+) \(request #(\d+)\)\.$/, (t, m, msg, num, id) => `${t(msg)} हम ${num} पर कॉल करेंगे (अनुरोध #${id})।`],
+    [/^We already have a call-back request for this number\. Please try again in (\d+) min\.$/,
+      "इस नंबर के लिए कॉल बैक अनुरोध पहले से है। कृपया $1 मिनट बाद फिर कोशिश करें।"],
+    [/^No results for "(.+)"$/, "\"$1\" के लिए कुछ नहीं मिला"],
+
+    // App bar: "Patient, My appointments"
+    [/^Patient, (.+)$/, (t, m, x) => `मरीज़, ${t(x)}`],
+    [/^You're signed in as (.+) \((\w+)\)\. Doctors see their bookings on the Doctor's desk\.$/,
+      "आप $1 ($2) के रूप में साइन इन हैं। डॉक्टर अपनी बुकिंग डॉक्टर डेस्क पर देखते हैं।"],
+    [/^Got it, all (\d+)$/, "ठीक है, सभी $1"],
+
+    // Timetable
+    [/^Hospital time: (\S+) (\d\d:\d\d) \((.+)\)\.$/, (t, m, d, c, z) => `अस्पताल का समय: ${t(d)} ${c} (${z})।`],
+    [/^(.+) · Room (\d+) · until (\d\d:\d\d)$/, (t, m, d, r, u) => `${t(d)} · कमरा ${r} · ${u} तक`],
+
+    // Booking
+    [/^(\d+) free (\d+)-minute slots?\. Dashed times are taken or already past\.$/,
+      "$2 मिनट के $1 खाली समय। डैश वाले समय भर चुके हैं या बीत चुके हैं।"],
+    [/^Every day (.+)$/, "रोज़ $1"],
+    [/^(.+) at$/, "$1,"],
+    [/^(.+), (\S+ \d+ \S+) at (\d\d:\d\d), Room (\d+)\. You'll find it under My appointments\.$/,
+      "$1, $2, $3 बजे, कमरा $4। यह आपको मेरे अपॉइंटमेंट में मिलेगा।"],
+
+    // My appointments
+    [/^(\d+) (?:person|people) ahead of you, about (\d+) minutes?\.$/, "आपसे पहले $1 लोग हैं, लगभग $2 मिनट।"],
+    [/^Please go to Room (\d+)\.$/, "कृपया कमरा $1 में जाएँ।"],
+    [/^You didn't check in by (\d\d:\d\d), so this booking was marked as missed\. If you're at the hospital, speak to the doctor's assistant, or$/,
+      "आपने $1 तक चेक-इन नहीं किया, इसलिए यह बुकिंग छूटी हुई मानी गई। अगर आप अस्पताल में हैं तो डॉक्टर के सहायक से बात करें, या"],
+    [/^If you checked in now: (.+)$/, (t, m, x) => `अगर आप अभी चेक-इन करें: ${t(x)}`],
+    [/^Press this when you are at the hospital\. Check-in closes at (\d\d:\d\d)\.$/, "अस्पताल पहुँचकर इसे दबाएँ। चेक-इन $1 बजे बंद हो जाएगा।"],
+    [/^Check-in opens at (\d\d:\d\d), 1 hour before your appointment\.$/, "चेक-इन $1 बजे खुलेगा, अपॉइंटमेंट से 1 घंटा पहले।"],
+    [/^Check-in opens at (\d\d:\d\d), 1 hour before your appointment\. Press "I've arrived" when you are at the hospital\.$/,
+      "चेक-इन $1 बजे खुलेगा, अपॉइंटमेंट से 1 घंटा पहले। अस्पताल पहुँचकर \"मैं पहुँच गया/गई\" दबाएँ।"],
+    [/^You wrote: "([\s\S]*)"$/, "आपने लिखा: \"$1\""],
+    [/^Checked in\. Your token is (\S+)$/, "चेक-इन हो गया। आपका टोकन $1 है"],
+    [/^(.+) Please wait near Room (\d+)\.$/, (t, m, x, r) => `${t(x)} कृपया कमरा ${r} के पास इंतज़ार करें।`],
+    [/^(.+), (\S+ \d+ \S+) at (\d\d:\d\d)\.$/, "$1, $2, $3 बजे।"],
+
+    // Server messages with numbers or names
+    [/^Password must be at least (\d+) characters\.$/, "पासवर्ड कम से कम $1 अक्षरों का होना चाहिए।"],
+    [/^Password is too long \(max (\d+) characters\)\.$/, "पासवर्ड बहुत लंबा है (ज़्यादा से ज़्यादा $1 अक्षर)।"],
+    [/^You can book up to (\d+) days ahead\. Pick an earlier date\.$/, "आप $1 दिन आगे तक बुक कर सकते हैं। पहले की तारीख चुनें।"],
+    [/^(.+) has no (\d\d:\d\d) slot in this department on (.+)\. Pick one of the times shown\.$/,
+      "$3 को इस विभाग में $1 का $2 का समय नहीं है। दिखाए गए समय में से चुनें।"],
+    [/^You already have a booking with (.+) on (.+) at (\d\d:\d\d)\. Cancel it first to choose another time\.$/,
+      "$2 को $3 बजे $1 के साथ आपकी बुकिंग पहले से है। दूसरा समय चुनने के लिए पहले उसे रद्द करें।"],
+    [/^This booking is (.+), so it can't be cancelled\.$/, (t, m, s) => `यह बुकिंग ${t(s)} है, इसलिए रद्द नहीं हो सकती।`],
+    [/^This booking is (.+), so it can't be checked in\.$/, (t, m, s) => `यह बुकिंग ${t(s)} है, इसलिए चेक-इन नहीं हो सकता।`],
+    [/^Bookings can be cancelled up to 1 hour before\. This one starts at (\d\d:\d\d), so cancelling closed at (\d\d:\d\d)\. Please call the hospital instead\.$/,
+      "बुकिंग 1 घंटा पहले तक रद्द हो सकती है। यह $1 बजे शुरू होती है, इसलिए रद्द करने का समय $2 बजे बंद हो गया। कृपया अस्पताल को कॉल करें।"],
+    [/^Check-in is only on the day of the appointment \((.+)\)\.$/, "चेक-इन सिर्फ़ अपॉइंटमेंट वाले दिन ($1) होता है।"],
+
+    // Small pieces
+    [/^Room (\d+)$/, "कमरा $1"],
+    [/^Sector (\d+)$/, "सेक्टर $1"],
+    [/^(\+\d+) (.+)$/, (t, m, code, country) => `${code} ${t(country)}`],          // "+91 India"
+    [/^mediQ (.+)$/, (t, m, rest) => `mediQ ${t(rest)}`],                           // "mediQ City Hospital"
+
+    // Last: lists like "Chest pain, High blood pressure" or "General Medicine · Room 1".
+    // Each part is translated on its own; names it doesn't know stay as they are.
+    [/^.*?(?: · |, ).*$/, (t, whole) => whole.split(/( · |, )/).map((p, i) => (i % 2 ? p : t(p))).join("")],
+  ],
+};

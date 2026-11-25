@@ -1138,3 +1138,31 @@ body.has-sidebar .site-footer { margin-top: 48px; border-radius: var(--radius-lg
   .kpi__value { font-size: 2rem; }
   .dash-tbl th, .dash-tbl td { padding: 8px 6px; }
 }
+
+/* =====================================================================
+   LANGUAGE (core.js section 1b): English / हिन्दी
+   ===================================================================== */
+html.i18n-loading body { visibility: hidden; }      /* a moment, while the page is put into Hindi */
+:root[lang="hi"] body { line-height: 1.6; }         /* Devanagari needs a little more room */
+.lang-btn { min-height: var(--touch); padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius);
+            background: var(--surface); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.lang-btn:hover { border-color: var(--border-input); }
+.lang-btn[lang="hi"] { font-family: "Noto Sans Devanagari", var(--font); }
+.menu-lang { display: none; }
+@media (max-width: 640px) {
+  .header-actions .lang-btn { display: none; }      /* phones: it moves into the menu */
+  .menu-lang { display: flex; gap: 8px; margin-top: 12px; }
+  .menu-lang .theme-btn { display: none; }
+}
+/* Hindi has no letters in Geist Mono: words that would use the mono font use the main font */
+:root[lang="hi"] .hero-waits .wait, :root[lang="hi"] .live-facts span { font-family: var(--font); letter-spacing: 0; }
+/* Small phones: keep every header button on screen, in English and in Hindi */
+@media (max-width: 420px) {
+  .header-actions { gap: 6px; }
+  .header-inner { gap: 8px; }
+  .btn-emergency { padding: 0 8px; }
+  .btn-emergency .chev { display: none; }
+  .header-actions .theme-btn { display: none; }      /* very small phones: it moves into the menu */
+  .menu-lang .theme-btn { display: inline-grid; }
+  .logo { font-size: 1.15rem; }
+}

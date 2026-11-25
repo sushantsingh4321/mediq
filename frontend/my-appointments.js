@@ -84,7 +84,8 @@
       return load();
     }
     const b = e.target.closest("[data-cancel]");
-    if (!b || !confirm("Cancel this appointment? The time will be offered to someone else.")) return;
+    // m.t(): a browser pop-up isn't page text, so ask for the Hindi directly (English stays English)
+    if (!b || !confirm(m.t("Cancel this appointment? The time will be offered to someone else."))) return;
     b.disabled = true;
     try {
       const a = await m.api(`/appointments/${b.dataset.cancel}/cancel`, { method: "POST" });

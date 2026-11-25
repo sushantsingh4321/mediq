@@ -2122,3 +2122,22 @@ The overview was redone with six rules that suit any dashboard:
 6. **The chart fits the question:** a line for "how did today go?" (a trend), sorted bars for
    "which department waits longest?" (a comparison). The hour that isn't over yet is dashed,
    so a half-finished hour doesn't look like a sudden drop.
+
+## Part 24. हिन्दी: the whole patient side in Hindi
+
+**How it works**
+- The pages stay written in English. `frontend/lang-hi.js` is a dictionary:
+  `"Book an appointment": "अपॉइंटमेंट बुक करें"`. It is only downloaded when Hindi is chosen.
+- `core.js` (section 1b) walks through every piece of text on the page and swaps it for the Hindi.
+  A **MutationObserver** (the browser telling us "the page just changed") translates text that
+  scripts add later: live numbers, messages, the server's error messages.
+- Sentences with numbers or names use **patterns**: `/^(\d+) min$/ -> "$1 मिनट"`.
+  Dates like "Thu 26 Nov" become "गुरु 26 नव॰". Lists ("Chest pain, Back pain") are translated part by part.
+- The choice is saved in `localStorage` (`mediq_lang`); switching reloads the page.
+- What people **type** (textareas) and names (doctors, tokens like GEN-014) are never changed.
+
+**To add or fix a translation:** copy the English exactly as it appears on the page and add a
+line to `phrases` in lang-hi.js. Have a native speaker check the medical words before going live.
+
+**Not yet in Hindi:** the staff pages (doctor's desk, pharmacy, admin, dashboard). They will
+show English for words the dictionary doesn't have yet.

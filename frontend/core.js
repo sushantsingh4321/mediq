@@ -10,6 +10,7 @@
 //   login:   api, getToken, setToken, clearToken, authHeader, user, checkAccess, goToLogin, ROLE_HOME
 //   text:    esc
 //   theme:   getTheme, toggleTheme
+//   language: getLang, setLang, t   (English / हिन्दी, see section 1b)
 //   UI:      pill, message, clearMessage, toast, loading, empty, appBar
 //
 // Wrapped in (function () { ... })(); so its inner names can't clash with other scripts.
@@ -63,6 +64,99 @@
         { duration: 450, easing: "cubic-bezier(.2,.7,.2,1)", pseudoElement: "::view-transition-new(root)" },
       );
     });
+  }
+
+  // ======================================================================
+  // 1b. LANGUAGE (English / हिन्दी)
+  // ======================================================================
+  // Every page is written in English. In Hindi mode we swap each piece of text for
+  // its Hindi version from lang-hi.js, a dictionary: "English sentence": "Hindi sentence".
+  // Text that scripts add later (live numbers, messages) is translated as it appears,
+  // using a MutationObserver (it tells us whenever the page changes).
+  // Switching language reloads the page, so going back to English is always exact.
+  const LANG_KEY = "mediq_lang";
+  function getLang() { try { return localStorage.getItem(LANG_KEY) === "hi" ? "hi" : "en"; } catch { return "en"; } }
+  function setLang(lang) {
+    try { localStorage.setItem(LANG_KEY, lang === "hi" ? "hi" : "en"); } catch { /* ignore */ }
+    location.reload();
+  }
+
+  const SKIP = "script, style, code, textarea, [translate='no'], .notranslate";   // never change text in these
+  const ATTR_SKIP = "[translate='no'], .notranslate";       // a text box's placeholder IS translated, what you type is not
+  const ATTRS = ["placeholder", "aria-label", "title", "alt"];
+  let dict = null;
+
+  // t("Waiting") -> "प्रतीक्षा में" in Hindi mode (scripts may call it directly). Unknown text stays English.
+  function t(text) {
+    if (!dict || text == null) return text;
+    const key = String(text).replace(/\s+/g, " ").trim();
+    if (!key || !/[A-Za-z]/.test(key)) return text;                    // nothing English to translate
+    if (Object.prototype.hasOwnProperty.call(dict.phrases, key)) return dict.phrases[key];
+    const dated = localDates(key);                                     // "Thu 26 Nov" -> "गुरु 26 नव॰"
+    for (const [re, out] of dict.patterns) {                           // sentences with numbers or names
+      if (re.test(dated)) return dated.replace(re, typeof out === "function" ? (...m) => out(t, ...m) : out);
+    }
+    return dated !== key && !/[A-Za-z]/.test(dated) ? dated : text;     // a date on its own
+  }
+  function localDates(s) {
+    return s.replace(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/g, d => dict.days[d])
+            .replace(/(\d{1,2}) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/g, (x, n, mo) => `${n} ${dict.months[mo]}`);
+  }
+
+  function translateText(node) {
+    const en = node.nodeValue;
+    const hi = t(en);
+    if (hi !== en) node.nodeValue = en.match(/^\s*/)[0] + hi + en.match(/\s*$/)[0];   // keep the spaces around it
+  }
+  function translateAttrs(el) {
+    for (const a of ATTRS) {
+      const v = el.getAttribute(a);
+      if (v) { const hi = t(v); if (hi !== v) el.setAttribute(a, hi); }
+    }
+    if (el.matches("input[type=submit], input[type=button]") && el.value) el.value = t(el.value);
+  }
+  function translateTree(rootNode) {
+    if (rootNode.nodeType === 3) {
+      if (rootNode.parentElement && !rootNode.parentElement.closest(SKIP)) translateText(rootNode);
+      return;
+    }
+    if (rootNode.nodeType !== 1 || rootNode.closest(ATTR_SKIP)) return;
+    translateAttrs(rootNode);
+    rootNode.querySelectorAll("*").forEach(el => { if (!el.closest(ATTR_SKIP)) translateAttrs(el); });
+    const walker = document.createTreeWalker(rootNode, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => (n.parentElement && n.parentElement.closest(SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+    });
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) translateText(n);
+  }
+
+  if (getLang() === "hi") {
+    root.lang = "hi";
+    root.classList.add("i18n-loading");                       // style.css hides the page until it's in Hindi
+    const reveal = () => root.classList.remove("i18n-loading");
+    setTimeout(reveal, 2500);                                  // never leave the page hidden
+
+    const start = () => {
+      dict = window.MEDIQ_HI;
+      if (!dict) return reveal();
+      translateTree(document.body);
+      document.title = t(document.title);
+      reveal();
+      const observer = new MutationObserver(records => {
+        for (const r of records) {
+          if (r.type === "characterData") translateTree(r.target);
+          else if (r.type === "attributes") translateAttrs(r.target);
+          else r.addedNodes.forEach(translateTree);
+        }
+        observer.takeRecords();                                // forget the changes WE just made
+      });
+      observer.observe(document.body, { childList: true, subtree: true, characterData: true,
+                                        attributes: true, attributeFilter: ATTRS });
+    };
+    const script = document.createElement("script");
+    script.src = "lang-hi.js";
+    script.onload = () => (document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", start) : start());
+    script.onerror = reveal;
+    document.head.appendChild(script);
   }
 
   // ======================================================================
@@ -201,15 +295,12 @@
   // Put <header id="app-bar"></header> at the top of the page, then call:
   //   mediq.appBar({ role: "Doctor", place: "Room 3" })
   // Shows: hospital name · role, place · clock · English/हिन्दी · theme toggle · user + sign out.
-  const LANG_KEY = "mediq_lang";
-
   function appBar({ role = "", place = "" } = {}) {
     const bar = document.getElementById("app-bar");
     if (!bar) return;
     bar.className = "ui-appbar";
     bar.setAttribute("role", "banner");
-    let lang = "en";
-    try { lang = localStorage.getItem(LANG_KEY) || "en"; } catch { /* ignore */ }
+    const lang = getLang();
 
     bar.innerHTML = `
       <button type="button" class="ui-barbutton ui-appbar__menu" data-sidebar-open aria-controls="sidebar"
@@ -219,7 +310,7 @@
       <span class="ui-appbar__spacer"></span>
       <div class="ui-appbar__tools">
         <time class="ui-appbar__clock" id="ab-clock" aria-label="Current time"></time>
-        <div class="ui-segmented" role="group" aria-label="Language">
+        <div class="ui-segmented notranslate" role="group" aria-label="Language / भाषा">
           <button type="button" class="ui-barbutton" data-lang="en" aria-pressed="${lang === "en"}">English</button>
           <button type="button" class="ui-barbutton" data-lang="hi" aria-pressed="${lang === "hi"}" lang="hi">हिन्दी</button>
         </div>
@@ -241,14 +332,9 @@
     tick();
     setInterval(tick, 10000);
 
-    // Language switch: a PLACEHOLDER for now. It remembers the choice and sets
-    // <html lang>, but the screens are not translated yet.
+    // Language switch: remembers the choice and reloads the page in that language (section 1b)
     bar.querySelectorAll("[data-lang]").forEach(b => b.addEventListener("click", () => {
-      const chosen = b.dataset.lang;
-      bar.querySelectorAll("[data-lang]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
-      try { localStorage.setItem(LANG_KEY, chosen); } catch { /* ignore */ }
-      document.documentElement.lang = chosen;
-      if (chosen === "hi") toast("हिन्दी अनुवाद जल्द आ रहा है। Hindi screens are coming soon.");
+      if (b.dataset.lang !== getLang()) setLang(b.dataset.lang);
     }));
 
     // Theme toggle: shows the moon in light mode ("go dark") and the sun in dark mode ("go light")
@@ -283,7 +369,7 @@
   // ======================================================================
   window.mediq = {
     api, esc, user, getToken, setToken, clearToken, authHeader, goToLogin, checkAccess, ROLE_HOME,
-    getTheme, toggleTheme,
+    getTheme, toggleTheme, getLang, setLang, t,
     pill, message, clearMessage, toast, loading, empty, appBar, svg, ICONS,
   };
 })();

@@ -96,6 +96,10 @@
               ${OPD_PAGES.map(p => `<a href="${p.href}">${p.name}</a>`).join("")}
             </div>
           </div>
+          <div class="menu-lang"><button type="button" class="icon-btn theme-btn"></button><button type="button" class="lang-btn notranslate" data-switch-lang
+                  lang="${window.mediq.getLang() === "hi" ? "en" : "hi"}"
+                  aria-label="${window.mediq.getLang() === "hi" ? "Switch to English" : "हिन्दी में देखें (Switch to Hindi)"}"
+          >${window.mediq.getLang() === "hi" ? "English" : "हिन्दी"}</button></div>
           <div class="menu-account" id="sh-account-menu"></div>
         </nav>
 
@@ -110,7 +114,11 @@
               </form>
             </div>
           </div>
-          <button type="button" class="icon-btn" id="sh-theme"></button>
+          <button type="button" class="lang-btn notranslate" data-switch-lang
+                  lang="${window.mediq.getLang() === "hi" ? "en" : "hi"}"
+                  aria-label="${window.mediq.getLang() === "hi" ? "Switch to English" : "हिन्दी में देखें (Switch to Hindi)"}"
+          >${window.mediq.getLang() === "hi" ? "English" : "हिन्दी"}</button>
+          <button type="button" class="icon-btn theme-btn" id="sh-theme"></button>
           <div class="dropdown emergency">
             <button type="button" class="btn btn-emergency" data-toggle aria-expanded="false">Emergency ${ICON.chevron}</button>
             <div class="panel" id="sh-emergency"><p class="note">Loading…</p></div>
@@ -245,17 +253,25 @@
 
   if (!headerBox) return; // a page without the header: nothing more to wire up
 
+  // ---------------------------------------------------------- 2c. English / हिन्दी (core.js does the work)
+  headerBox.querySelectorAll("[data-switch-lang]").forEach(b => b.addEventListener("click", () =>
+    window.mediq.setLang(window.mediq.getLang() === "hi" ? "en" : "hi")));
+
   // ---------------------------------------------------------- 2c. light / dark switch
   // Moon in light mode ("go dark"), sun in dark mode ("go light"). core.js does the switching.
-  const themeBtn = document.getElementById("sh-theme");
+  // Two copies: one in the bar, one in the phone menu (very small phones have no room in the bar)
+  const themeBtns = headerBox.querySelectorAll(".theme-btn");
   const drawThemeButton = () => {
     const dark = window.mediq.getTheme() === "dark";
-    themeBtn.innerHTML = window.mediq.svg(dark ? window.mediq.ICONS.sun : window.mediq.ICONS.moon, 18);
-    themeBtn.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
-    themeBtn.title = themeBtn.getAttribute("aria-label");
+    const label = dark ? "Switch to light mode" : "Switch to dark mode";
+    themeBtns.forEach(b => {
+      b.innerHTML = window.mediq.svg(dark ? window.mediq.ICONS.sun : window.mediq.ICONS.moon, 18);
+      b.setAttribute("aria-label", label);
+      b.title = label;
+    });
   };
   drawThemeButton();
-  themeBtn.addEventListener("click", () => window.mediq.toggleTheme(themeBtn));
+  themeBtns.forEach(b => b.addEventListener("click", () => window.mediq.toggleTheme(b)));
   document.addEventListener("mediq:theme", drawThemeButton);
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawThemeButton);
 
@@ -332,7 +348,9 @@
   function search(text) {
     const q = text.trim().toLowerCase();
     if (!q) { results.hidden = true; return []; }
-    const hits = searchIndex.filter(i => `${i.title} ${i.sub}`.toLowerCase().includes(q)).slice(0, 8);
+    // Match the English AND the Hindi names, so "हृदय" finds Cardiology (t() = no change in English mode)
+    const t = window.mediq.t;
+    const hits = searchIndex.filter(i => `${i.title} ${i.sub} ${t(i.title)} ${t(i.sub)}`.toLowerCase().includes(q)).slice(0, 8);
     results.innerHTML = hits.length
       ? hits.map(h => `<a href="${h.href}">${esc(h.title)}<small>${esc(h.sub)}</small></a>`).join("")
       : `<p class="note">No results for "${esc(text.trim())}"</p>`;
