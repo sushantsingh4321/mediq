@@ -5,6 +5,14 @@ The visual rules every page follows. The tokens live at the top of `frontend/sty
 Guidance followed: impeccable (pbakaus/impeccable) and tasteskill (Leonxlnx/taste-skill),
 applied by hand (their bundled scripts are not run in this project).
 
+## Light and simple (the default look, owner's request Nov 2026)
+
+Mostly white (`--surface`) on a neutral light grey page (`--page #f6f7f9`), soft grey edges
+(`--border #e4e7ec`), dark grey text (`--text #1b2333`), and ONE calm blue (`--cobalt #2d5fb8`,
+6.1:1 on white) for links, the main button and the current page. No navy blocks in light mode:
+the app bar, sidebar, footer and live-numbers band are white or light grey. Red appears only for
+emergencies and errors. Dark mode keeps its own navy palette. (style.css: "LIGHT & SIMPLE")
+
 ## The world: "a bright, calm hospital"
 
 Light and clinical: white and soft blue grounds, cobalt for actions, real photographs of

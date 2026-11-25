@@ -1275,3 +1275,87 @@ html.i18n-loading body { visibility: hidden; }      /* a moment, while the page 
   .btn-emergency { padding: 0 6px; font-size: 0.8125rem; }
   .phone-row select { flex-basis: 96px; }
 }
+
+/* =====================================================================
+   LIGHT & SIMPLE (light mode, the default) — the owner asked for a calm,
+   simple, light look: white and soft grey everywhere, ONE quieter blue
+   (#2d5fb8, 6.1:1 on white) for actions and links, no dark navy blocks.
+   Dark mode (data-theme="dark") is unchanged.
+   ===================================================================== */
+:root:not([data-theme="dark"]) {
+  --cobalt: #2d5fb8;
+  --page: #f6f7f9;            /* neutral light grey, no blue tint */
+  --surface: #ffffff;
+  --tint: #eef3fb;            /* selected / highlighted: barely blue */
+  --text: #1b2333;
+  --text-muted: #5b6475;      /* 6.0:1 on white */
+  --border: #e4e7ec;
+  --border-input: #868f9f;    /* 3.3:1: fields stay easy to find */
+  --appbar: #ffffff;
+  --hero-bg: #ffffff;
+  --icon-bg: #eef3fb;
+  --er-bg: #f6f7f9;
+  --er-text: #a2281f;
+  --shadow-pop: 0 8px 24px rgba(27, 35, 51, .10);
+  --c-key: var(--cobalt);
+}
+
+/* App bar: white, dark text, a hairline edge */
+:root:not([data-theme="dark"]) .ui-appbar { background: var(--surface); color: var(--text); border-bottom: 1px solid var(--border); }
+:root:not([data-theme="dark"]) body.has-sidebar .ui-appbar { border: 1px solid var(--border); }
+:root:not([data-theme="dark"]) .ui-appbar__hospital { color: var(--text); }
+:root:not([data-theme="dark"]) .ui-appbar__role { border-color: var(--border); color: var(--text-muted); }
+:root:not([data-theme="dark"]) .ui-barbutton { color: var(--text); border-color: var(--border); }
+:root:not([data-theme="dark"]) .ui-barbutton:hover { background: var(--tint); }
+:root:not([data-theme="dark"]) .ui-barbutton[aria-pressed="true"] { background: var(--tint); color: var(--link); border-color: var(--border); font-weight: 600; }
+
+/* Sidebar: white panel, grey labels, the current page in soft blue */
+:root:not([data-theme="dark"]) .sidebar { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border);
+                                          box-shadow: 0 1px 2px rgba(27, 35, 51, .04); }
+:root:not([data-theme="dark"]) .sb-top, :root:not([data-theme="dark"]) .sb-bottom { border-color: var(--border); }
+:root:not([data-theme="dark"]) .sb-group + .sb-group { border-top-color: var(--border); }
+:root:not([data-theme="dark"]) .sb-brand { color: var(--text); }
+:root:not([data-theme="dark"]) .sb-brand b { color: var(--link); }
+:root:not([data-theme="dark"]) .sb-title { color: var(--text-muted); }
+:root:not([data-theme="dark"]) .sb-link { color: var(--text); }
+:root:not([data-theme="dark"]) .sb-link svg { color: var(--text-muted); }
+:root:not([data-theme="dark"]) .sb-link:hover { background: var(--page); color: var(--text); }
+:root:not([data-theme="dark"]) .sb-link[aria-current="page"] { background: var(--tint); color: var(--link); box-shadow: none; font-weight: 600; }
+:root:not([data-theme="dark"]) .sb-link[aria-current="page"] svg { color: var(--link); }
+:root:not([data-theme="dark"]) .sb-fold { color: var(--text-muted); }
+:root:not([data-theme="dark"]) .sb-nav { scrollbar-color: var(--border) transparent; }
+:root:not([data-theme="dark"]) .sb-icon { color: var(--text-muted); }
+:root:not([data-theme="dark"]) .sb-icon:hover { background: var(--page); color: var(--text); }
+:root:not([data-theme="dark"]) body.sb-folded .sb-badge:not([hidden]) { box-shadow: 0 0 0 2px var(--surface); }
+:root:not([data-theme="dark"]) .sb-backdrop { background: rgba(27, 35, 51, .35); }
+
+/* Footer: light grey, dark text */
+:root:not([data-theme="dark"]) footer.site-footer { background: var(--page); color: var(--text-muted); border-top: 1px solid var(--border); }
+:root:not([data-theme="dark"]) .site-footer .logo, :root:not([data-theme="dark"]) .site-footer .logo small,
+:root:not([data-theme="dark"]) .site-footer h2, :root:not([data-theme="dark"]) .site-footer b,
+:root:not([data-theme="dark"]) .footer-brand p { color: var(--text); }
+:root:not([data-theme="dark"]) .site-footer a { color: var(--text); }
+:root:not([data-theme="dark"]) .site-footer a:hover { color: var(--link); }
+:root:not([data-theme="dark"]) .site-footer li small, :root:not([data-theme="dark"]) .site-footer address,
+:root:not([data-theme="dark"]) .footer-bottom { color: var(--text-muted); }
+:root:not([data-theme="dark"]) .footer-bottom { border-top-color: var(--border); }
+:root:not([data-theme="dark"]) .footer-bottom a { color: var(--text-muted); }
+
+/* Live numbers: a white band with blue figures, not a navy block */
+:root:not([data-theme="dark"]) .live-band { background: var(--surface); color: var(--text);
+                                            border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+:root:not([data-theme="dark"]) .live-band h2 { color: var(--text); }
+:root:not([data-theme="dark"]) .live-band .section-lead { color: var(--text-muted); }
+:root:not([data-theme="dark"]) .live-facts { border-top-color: var(--border); }
+:root:not([data-theme="dark"]) .live-facts li + li { border-color: var(--border); }
+:root:not([data-theme="dark"]) .live-facts b { color: var(--link); }
+:root:not([data-theme="dark"]) .live-facts span { color: var(--text); }
+:root:not([data-theme="dark"]) .live-facts a { color: var(--link); }
+
+/* Home: calm emergency strip (red only for the words), sections on white and grey */
+:root:not([data-theme="dark"]) .er-strip { border-bottom: 1px solid var(--border); }
+:root:not([data-theme="dark"]) .hero { border-bottom: 1px solid var(--border); }
+:root:not([data-theme="dark"]) .tint-section { background: var(--surface); }
+:root:not([data-theme="dark"]) .quick { box-shadow: 0 8px 24px rgba(27, 35, 51, .06); border: 1px solid var(--border); }
+:root:not([data-theme="dark"]) .phone { background: #2a3142; box-shadow: 0 18px 40px rgba(27, 35, 51, .14); }
+:root:not([data-theme="dark"]) .hero-waits { box-shadow: 0 12px 32px rgba(27, 35, 51, .10); border: 1px solid var(--border); }
